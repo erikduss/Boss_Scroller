@@ -4,9 +4,18 @@ using UnityEngine;
 
 public class SmoothCamera : MonoBehaviour
 {
-    public float dampTime = 0.15f;
+    public float dampTime = 1.15f;
     private Vector3 velocity = Vector3.zero;
     public Transform target;
+
+    private GameObject staticCameraTarget;
+
+    private void Start()
+    {
+        staticCameraTarget = new GameObject();
+        staticCameraTarget.name = "StaticCameraTarget";
+        GameObject.Instantiate(staticCameraTarget);
+    }
 
     // Update is called once per frame
     void Update()
@@ -18,8 +27,16 @@ public class SmoothCamera : MonoBehaviour
             Vector3 destination = transform.position + delta;
 
             if (destination.y < 0) destination.y = 0;
+            if (destination.x < -30f) destination.x = -30f;
+            if (destination.x > 0f) destination.x = 0f;
 
             transform.position = Vector3.SmoothDamp(transform.position, destination, ref velocity, dampTime);
         }
+    }
+
+    public void SetStaticCamera(Vector3 targetPosition)
+    {
+        staticCameraTarget.transform.position = targetPosition;
+        target = staticCameraTarget.transform;
     }
 }

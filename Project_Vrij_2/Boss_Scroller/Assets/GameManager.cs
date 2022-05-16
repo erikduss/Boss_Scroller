@@ -4,13 +4,16 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    [SerializeField] GameObject bossRoomBorders;
-    [SerializeField] DeathBringer deathBringerEnemy;
+    [SerializeField] private GameObject bossRoomBorders;
+    [SerializeField] private DeathBringer deathBringerEnemy;
+    private SmoothCamera cam;
+    private UIManager uiManager;
 
     // Start is called before the first frame update
     void Start()
     {
-
+        cam = Camera.main.GetComponent<SmoothCamera>();
+        uiManager = GetComponent<UIManager>();
     }
 
     // Update is called once per frame
@@ -23,5 +26,7 @@ public class GameManager : MonoBehaviour
     {
         bossRoomBorders.SetActive(true);
         StartCoroutine(deathBringerEnemy.ActivateBoss());
+        cam.SetStaticCamera(new Vector3(0,0,0));
+        uiManager.EnableBossUI();
     }
 }
