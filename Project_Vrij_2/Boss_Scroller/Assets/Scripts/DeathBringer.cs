@@ -42,6 +42,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	[SerializeField] private BoxCollider2D meleeAttackTrigger;
 
+	private bool combatEnabled = false;
+	private Vector3 startPosition = new Vector3(4.27f,-1.8f,0);
+
 	// Use this for initialization
 	void Start()
 	{
@@ -59,6 +62,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	void Update()
     {
+		if (!combatEnabled) return;
+
         ChooseNewAttack();
 
         if (IsAllowedToMove())
@@ -66,6 +71,14 @@ public class DeathBringer : MonoBehaviour, IDamageable
             MoveAgent();
         }
     }
+
+	public IEnumerator ActivateBoss()
+    {
+		//renderer.enabled = false;
+		StartCoroutine(Teleport(startPosition));
+		yield return new WaitForSeconds(3f);
+		combatEnabled = true;
+	}
 
 	private void ChooseNewAttack()
     {

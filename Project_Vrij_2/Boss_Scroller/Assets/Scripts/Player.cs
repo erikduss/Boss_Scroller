@@ -33,6 +33,12 @@ public class Player : MonoBehaviour, IDamageable
     private IDamageable objectToDamage;
     private bool alreadyDamaged = false;
 
+    [SerializeField] private HealthBar healthBar;
+    private float maxHealth = 100;
+    private float currentHealth = 100;
+
+    private GameManager gameManager;
+
     // Use this for initialization
     void Start()
     {
@@ -40,9 +46,16 @@ public class Player : MonoBehaviour, IDamageable
         rbPlayer = this.GetComponent<Rigidbody2D>();
         animPlayer = this.GetComponent<Animator>();
 
+        gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+
         renderer = GetComponent<SpriteRenderer>();
 
         defaultAttackTriggerOffset = Attack_Trigger.offset;
+
+        if(healthBar != null)
+        {
+            healthBar.SetUpHealthBar(maxHealth);
+        }
     }
 
     void Update()
@@ -167,6 +180,12 @@ public class Player : MonoBehaviour, IDamageable
         {
             animPlayer.Play("Hurt");
 
+            if(currentHealth >= 0)
+            {
+                healthBar.DecreaseHealth(damage);
+                currentHealth -= damage;
+            }
+
             Debug.Log("Player took damage");
 
             playerInvincibilityTimer.StartTimer(.80f);
@@ -188,6 +207,11 @@ public class Player : MonoBehaviour, IDamageable
         if (triggerCollision.gameObject.tag == "DamageAble" && objectToDamage == null)
         {
             objectToDamage = triggerCollision.gameObject.GetComponent<IDamageable>();
+        }
+        if(triggerCollision.gameObject.name == "BossTrigger")
+        {
+            gameManager.LockBossRoom();
+            triggerCollision.gameObject.SetActive(false);
         }
     }
 
