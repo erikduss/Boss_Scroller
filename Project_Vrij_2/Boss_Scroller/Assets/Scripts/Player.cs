@@ -10,6 +10,17 @@ public class Player : MonoBehaviour, IDamageable
 
     private Vector3 startPos;
 
+    //implement stamina sytstem
+    [SerializeField] private StaminaBar staminaBar;
+    private float recoveryDelay = 2f;
+    private float recoveryRate = 0.1f;
+    private float maxStamina = 100;
+    private float currentStamina = 100;
+    private float dodgeCost = 25f;
+    private float attackCost = 20f;
+
+    private WaitTimer staminaRecoverTimer = new WaitTimer();
+
     private SpriteRenderer renderer;
 
     private BoxCollider2D playerCollider;
@@ -62,6 +73,10 @@ public class Player : MonoBehaviour, IDamageable
         {
             healthBar.SetUpHealthBar(maxHealth);
         }
+        if (staminaBar != null)
+        {
+            staminaBar.SetUpStaminaBar(maxStamina);
+        }
     }
 
     void Update()
@@ -78,6 +93,7 @@ public class Player : MonoBehaviour, IDamageable
         }
 
         CheckInputs();
+        RecoverStamina();
     }
 
     // Update is called once per frame
@@ -98,6 +114,23 @@ public class Player : MonoBehaviour, IDamageable
         objectToDamage = null;
     }
 
+    private void RecoverStamina()
+    {
+        if(currentStamina < maxStamina && staminaRecoverTimer.TimerFinished())
+        {
+            currentStamina += recoveryRate;
+            if (currentStamina > maxStamina)
+            {
+                currentStamina = maxStamina;
+                staminaBar.SetStamina(maxStamina);
+            }
+            else
+            {
+                staminaBar.IncreaseStamina(recoveryRate);
+            }
+        }
+    }
+
     private void CheckInputs()
     {
         if (!playerInvincibilityTimer.TimerFinished())
@@ -113,11 +146,23 @@ public class Player : MonoBehaviour, IDamageable
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            AttackAction();
+            if(currentStamina >= attackCost)
+            {
+                AttackAction();
+                currentStamina -= attackCost;
+                staminaBar.DecreaseStamina(attackCost);
+                staminaRecoverTimer.StartTimer(recoveryDelay);
+            }
         }
         else if (Input.GetKeyDown(KeyCode.Space))
         {
-            DodgeAction();
+            if(currentStamina >= dodgeCost)
+            {
+                DodgeAction();
+                currentStamina -= dodgeCost;
+                staminaBar.DecreaseStamina(dodgeCost);
+                staminaRecoverTimer.StartTimer(recoveryDelay);
+            }
         }
         else
         {

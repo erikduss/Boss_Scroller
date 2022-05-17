@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class DeathBringer : MonoBehaviour, IDamageable
 {
-	private float maxHealth = 300;
-	private float currentHealth = 300;
+	private float maxHealth = 1000;
+	private float currentHealth = 1000;
 	
 	private float strength = 15;
 
@@ -153,7 +153,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				}
 				else if (randNumber >= 20 && randNumber < 40)
                 {
-					attackFatigueTimer.StartTimer(RandomFatigueTime(7.5f, 10f));
+					attackFatigueTimer.StartTimer(RandomFatigueTime(7f, 8.5f));
 					walkFatigueTimer.StartTimer(walkFatigueTime);
 					StartCoroutine(CastBigSpellBelow());
 				}
@@ -201,7 +201,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 8.75 seconds
 	private void ExplodeAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(8.75f + attackFatigueTime, 10.75f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(8.75f + attackFatigueTime, 9.75f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime * 2.5f);
 
 		StartCoroutine(Explode());
@@ -210,7 +210,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 2 seconds
 	private void SpellAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(2f + attackFatigueTime, 4f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(2f + attackFatigueTime, 3f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(CastingSpell());
 	}
@@ -218,7 +218,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 3 seconds
 	private void TeleportAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 5f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 
 		StartCoroutine(Teleport(PickRandomTeleportLocation()));
@@ -235,7 +235,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 6.05 seconds
 	private IEnumerator AmbushAttack()
 	{
-		attackFatigueTimer.StartTimer(RandomFatigueTime(6.05f + attackFatigueTime, 8.05f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(6.05f + attackFatigueTime, 7.05f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 
 		//teleport location
