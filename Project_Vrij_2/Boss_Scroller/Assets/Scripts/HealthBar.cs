@@ -7,7 +7,7 @@ public class HealthBar : MonoBehaviour
 {
     private Slider healthBar;
 
-    private void Start()
+    private void Awake()
     {
         healthBar = gameObject.GetComponentInChildren<Slider>();
     }

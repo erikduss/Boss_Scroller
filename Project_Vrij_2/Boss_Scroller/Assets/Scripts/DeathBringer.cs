@@ -45,6 +45,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private bool combatEnabled = false;
 	private Vector3 startPosition = new Vector3(4.27f,-1.8f,0);
 
+	private AudioManager audioManager;
+
 	// Use this for initialization
 	void Start()
 	{
@@ -52,6 +54,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		rbAI = GetComponent<Rigidbody2D>();
 		boxCollider = GetComponent<BoxCollider2D>();
 		renderer = GetComponent<SpriteRenderer>();
+
+		audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
 
 		setSpeed(speed);
 
@@ -302,6 +306,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 		castLocation.y = spellBelow.transform.position.y;
 		GameObject.Instantiate(spellBelowBig, castLocation, spellBelow.transform.rotation);
+
+		StartCoroutine(audioManager.PlayDeathBringerSpellSound(3.25f, 1.2f));
 	}
 
 	private void CastSpell(int amountOfSpells)
@@ -360,7 +366,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 			}
 		}
-    }
+
+		StartCoroutine(audioManager.PlayDeathBringerSpellSound(4f, 2f));
+	}
 
 	private Vector3 PickRandomTeleportLocation()
     {
@@ -479,6 +487,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private IEnumerator CastBigSpellBelow()
     {
 		rbAI.velocity = Vector2.zero;
+		audioManager.PlayDeathBringerSpellAttackSound();
 		animator.Play("Close-Range-Spell");
 		yield return new WaitForSeconds(1.75f);
 		SummonBigSpell();
@@ -488,6 +497,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private IEnumerator CastingSpell()
     {
 		rbAI.velocity = Vector2.zero;
+		audioManager.PlayDeathBringerSpellAttackSound();
 		animator.Play("Cast");
 		yield return new WaitForSeconds(1);
 		int rand = Random.Range(3,7);
@@ -498,8 +508,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private IEnumerator Melee()
     {
 		rbAI.velocity = Vector2.zero;
+		audioManager.PlayDeathBringerAttackSound();
 		animator.Play("Attack");
 		yield return new WaitForSeconds(1.3f);
+		audioManager.PlayDeathBringerSwingSound();
 		meleeAttackTrigger.transform.gameObject.SetActive(true);
 		meleeAttackTrigger.offset = new Vector2(-0.54f, -0.078f);
 		yield return new WaitForSeconds(0.1f);
@@ -517,6 +529,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private IEnumerator Teleport(Vector3 teleportLocation)
     {
 		rbAI.velocity = Vector2.zero;
+		audioManager.PlayDeathBringerTeleportSound();
 		animator.Play("Teleport Start");
 		yield return new WaitForSeconds(0.5f);
 		boxCollider.enabled = false;
@@ -526,6 +539,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(1);
 		renderer.enabled = true;
 		animator.Play("Teleport End");
+		audioManager.PlayDeathBringerTeleportSound();
 		yield return new WaitForSeconds(0.5f);
 		boxCollider.enabled = true;
 		yield return new WaitForSeconds(0.5f);
@@ -536,6 +550,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		rbAI.velocity = Vector2.zero;
 
 		animator.Play("AOE-Explode");
+		audioManager.PlayDeathBringerExplotionChannelSound();
 
 		Color initialColor = renderer.color;
 		Color targetColor = Color.red;
@@ -564,6 +579,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		}
 
 		elapsedTime = 0;
+		audioManager.PlayDeathBringerExplotionChannelSound();
 
 		while (elapsedTime < 0.75f)
 		{
@@ -596,6 +612,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 		explosion_Indicator.GetComponent<BoxCollider2D>().enabled = true;
 
+		audioManager.PlayDeathBringerExplotionSound();
 		animator.Play("AOE-Explode-End");
 
 		while (elapsedTime < 0.75f)

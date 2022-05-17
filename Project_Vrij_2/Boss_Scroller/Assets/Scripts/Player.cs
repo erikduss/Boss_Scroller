@@ -38,15 +38,17 @@ public class Player : MonoBehaviour, IDamageable
     private float currentHealth = 100;
 
     private GameManager gameManager;
+    private AudioManager audioManager;
 
     // Use this for initialization
-    void Start()
+    void Awake()
     {
         playerCollider = GetComponent<BoxCollider2D>();
         rbPlayer = this.GetComponent<Rigidbody2D>();
         animPlayer = this.GetComponent<Animator>();
 
         gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
+        audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
 
         renderer = GetComponent<SpriteRenderer>();
 
@@ -108,6 +110,7 @@ public class Player : MonoBehaviour, IDamageable
     private void AttackAction()
     {
         rbPlayer.velocity = new Vector2(0, rbPlayer.velocity.y);
+        audioManager.PlayPlayerAttackSound();
         animPlayer.Play("Dash_Attack");
         playerActionTimer.StartTimer(attackCooldown);
         StartCoroutine(DamageCollisionDuration(attackCooldown));
@@ -128,6 +131,7 @@ public class Player : MonoBehaviour, IDamageable
 
         GrandPlayerInvincibility(dodgeImmuneTime);
 
+        audioManager.PlaySlidePlayerSound();
         animPlayer.Play("Slide");
         playerActionTimer.StartTimer(dodgeCooldown);
     }
@@ -137,7 +141,7 @@ public class Player : MonoBehaviour, IDamageable
         playerInvincibilityTimer.StartTimer(immuneTime);
     }
 
-    void MovePlayer()
+    private void MovePlayer()
     {
         float hor = Input.GetAxis("Horizontal");
         //float ver = Input.GetAxis("Vertical");
@@ -146,6 +150,8 @@ public class Player : MonoBehaviour, IDamageable
 
         animPlayer.SetFloat("HorizontalSpeed", Mathf.Abs(hor));
         //animPlayer.SetFloat("verticalSpeed", ver);
+
+        if (Mathf.Abs(hor) > 0) audioManager.PlayMovementPlayerSound();
 
         if (hor == 0)
         {

@@ -9,3 +9,10 @@ public enum EnemyCondition
     IsDamaged       = (1 << 1),
     HasLowHealth    = (1 << 2)
 }
+
+public enum MusicType
+{
+    MENU,
+    TUTORIAL,
+    BOSS
+}
