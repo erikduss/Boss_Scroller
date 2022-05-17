@@ -8,6 +8,8 @@ public class Player : MonoBehaviour, IDamageable
     private Rigidbody2D rbPlayer;
     private Animator animPlayer;
 
+    private Vector3 startPos;
+
     private SpriteRenderer renderer;
 
     private BoxCollider2D playerCollider;
@@ -52,6 +54,8 @@ public class Player : MonoBehaviour, IDamageable
 
         renderer = GetComponent<SpriteRenderer>();
 
+        startPos = this.transform.position;
+
         defaultAttackTriggerOffset = Attack_Trigger.offset;
 
         if(healthBar != null)
@@ -62,6 +66,8 @@ public class Player : MonoBehaviour, IDamageable
 
     void Update()
     {
+        if (!gameManager.playerIsAlive) return;
+
         if (damaging)
         {
             if (objectToDamage != null && !alreadyDamaged)
@@ -78,6 +84,18 @@ public class Player : MonoBehaviour, IDamageable
     void FixedUpdate()
     {
         //CheckInputs();
+    }
+
+    public void SetDefaultValues()
+    {
+        currentHealth = maxHealth;
+        healthBar.SetUpHealthBar(maxHealth);
+        animPlayer.Play("Idle");
+        transform.position = startPos;
+        playerCollider.enabled = true;
+        rbPlayer.velocity = Vector2.zero;
+        renderer.flipX = false;
+        objectToDamage = null;
     }
 
     private void CheckInputs()
@@ -184,19 +202,39 @@ public class Player : MonoBehaviour, IDamageable
     {
         if (playerInvincibilityTimer.TimerFinished())
         {
-            animPlayer.Play("Hurt");
-
             if(currentHealth >= 0)
             {
                 healthBar.DecreaseHealth(damage);
                 currentHealth -= damage;
+
+                if(currentHealth > 0)
+                {
+                    animPlayer.Play("Hurt");
+                    audioManager.PlayPlayerImpact();
+
+                    playerInvincibilityTimer.StartTimer(.80f);
+
+                    playerCollider.enabled = false;
+                }
+                else
+                {
+                    gameManager.playerIsAlive = false;
+                    rbPlayer.velocity = Vector2.zero;
+                    playerCollider.enabled = false;
+                    animPlayer.Play("Death");
+                    StartCoroutine(audioManager.PlayDefeatAudio());
+                    StartCoroutine(gameManager.GameOver());
+                }
             }
-
-            Debug.Log("Player took damage");
-
-            playerInvincibilityTimer.StartTimer(.80f);
-
-            playerCollider.enabled = false;
+            else
+            {
+                gameManager.playerIsAlive = false;
+                rbPlayer.velocity = Vector2.zero;
+                playerCollider.enabled = false;
+                animPlayer.Play("Death");
+                StartCoroutine(audioManager.PlayDefeatAudio());
+                StartCoroutine(gameManager.GameOver());
+            }
         }
     }
 

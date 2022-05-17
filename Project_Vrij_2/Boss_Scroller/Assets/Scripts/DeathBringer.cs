@@ -4,7 +4,8 @@ using UnityEngine;
 
 public class DeathBringer : MonoBehaviour, IDamageable
 {
-	private float health = 300;
+	private float maxHealth = 300;
+	private float currentHealth = 300;
 	
 	private float strength = 15;
 
@@ -23,6 +24,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private Animator animator;
 	private Rigidbody2D rbAI;
 	private BoxCollider2D boxCollider;
+
+	private Vector3 startPos;
 
 	private SpriteRenderer renderer;
 
@@ -46,6 +49,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private Vector3 startPosition = new Vector3(4.27f,-1.8f,0);
 
 	private AudioManager audioManager;
+	private GameManager gameManager;
+
+	[SerializeField] private HealthBar healthBar;
 
 	// Use this for initialization
 	void Start()
@@ -56,17 +62,25 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		renderer = GetComponent<SpriteRenderer>();
 
 		audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
+		gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
 
 		setSpeed(speed);
 
+		startPos = transform.position;
+
 		player = GameObject.FindGameObjectWithTag("Player");
+
+		if (healthBar != null)
+		{
+			healthBar.SetUpHealthBar(maxHealth);
+		}
 
 		attackFatigueTimer.StartTimer(RandomFatigueTime(1.4f, 4.7f));
 	}
 
 	void Update()
     {
-		if (!combatEnabled) return;
+		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive) return;
 
         ChooseNewAttack();
 
@@ -75,6 +89,17 @@ public class DeathBringer : MonoBehaviour, IDamageable
             MoveAgent();
         }
     }
+
+	public void ResetToDefaults()
+    {
+		currentHealth = maxHealth;
+		healthBar.SetUpHealthBar(maxHealth);
+		animator.Play("Idle");
+		transform.position = startPos;
+		combatEnabled = false;
+		rbAI.velocity = Vector2.zero;
+		renderer.flipX = false;
+	}
 
 	public IEnumerator ActivateBoss()
     {
@@ -421,7 +446,28 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	public void TakeDamage(float damage)
 	{
-		Debug.Log("Taken " + damage + " damage");
+		if (currentHealth >= 0)
+		{
+			healthBar.DecreaseHealth(damage);
+			currentHealth -= damage;
+
+			if(currentHealth > 0)
+            {
+				audioManager.PlayEnemyImpact();
+			}
+            else
+            {
+				boxCollider.enabled = false;
+				audioManager.PlayDeathBringerDeathSound();
+				animator.Play("Death");
+			}
+		}
+        else
+        {
+			boxCollider.enabled = false;
+			audioManager.PlayDeathBringerDeathSound();
+			animator.Play("Death");
+		}
 	}
 
 	public void setSpeed(float val)
@@ -513,11 +559,32 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(1.3f);
 		audioManager.PlayDeathBringerSwingSound();
 		meleeAttackTrigger.transform.gameObject.SetActive(true);
-		meleeAttackTrigger.offset = new Vector2(-0.54f, -0.078f);
+        if (!renderer.flipX)
+        {
+			meleeAttackTrigger.offset = new Vector2(-0.54f, -0.078f);
+		}
+        else
+        {
+			meleeAttackTrigger.offset = new Vector2(0.54f, -0.078f);
+		}
 		yield return new WaitForSeconds(0.1f);
-		meleeAttackTrigger.offset = new Vector2(-0.34f, -0.078f);
+		if (!renderer.flipX)
+		{
+			meleeAttackTrigger.offset = new Vector2(-0.34f, -0.078f);
+		}
+		else
+		{
+			meleeAttackTrigger.offset = new Vector2(0.34f, -0.078f);
+		}
 		yield return new WaitForSeconds(0.1f);
-		meleeAttackTrigger.offset = new Vector2(-0.24f, -0.01f);
+		if (!renderer.flipX)
+		{
+			meleeAttackTrigger.offset = new Vector2(-0.24f, -0.01f);
+		}
+		else
+		{
+			meleeAttackTrigger.offset = new Vector2(0.24f, -0.01f);
+		}
 		yield return new WaitForSeconds(0.1f);
 		meleeAttackTrigger.transform.gameObject.SetActive(false);
 		yield return new WaitForSeconds(.45f);

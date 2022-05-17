@@ -15,11 +15,20 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private GameObject menuUIPanel;
 
+    [SerializeField] private GameObject deathPanel;
+    private Image deathPanelImage;
+    [SerializeField] private TextMeshProUGUI deathPanelText;
+
+    [SerializeField] private List<TextMeshProUGUI> tutorialText;
+
     // Start is called before the first frame update
     void Start()
     {
         PlayerUI.SetActive(false);
         BossUI.SetActive(false);
+        deathPanelImage = deathPanel.GetComponent<Image>();
+
+        SetTutorialText(false);
     }
 
     // Update is called once per frame
@@ -28,11 +37,31 @@ public class UIManager : MonoBehaviour
         
     }
 
-    public void TransitionToGame()
+    public IEnumerator ResetAllUI()
+    {
+        SetAllMainMenuUIImagesAlpha(1,0.1f);
+        SetDeathPanelAlpha(0,1f);
+        SetPlayerUI(true);
+        SetBossUI(false);
+        SetMenuUI(true);
+        SetUIButtonStates(true);
+        yield return new WaitForSeconds(1);
+        deathPanel.SetActive(false);
+    }
+
+    public void SetUIButtonStates(bool state)
     {
         foreach(Button but in mainMenuButtons)
         {
-            but.interactable = false;
+            but.interactable = state;
+        }
+    }
+
+    public void SetTutorialText(bool state)
+    {
+        foreach (TextMeshProUGUI txt in tutorialText)
+        {
+            txt.enabled = state;
         }
     }
 
@@ -46,6 +75,13 @@ public class UIManager : MonoBehaviour
         {
             StartCoroutine(TextFadeTo(txt, targetAlpha, time));
         }
+    }
+
+    public void SetDeathPanelAlpha(float targetAlpha, float time)
+    {
+        deathPanel.SetActive(true);
+        StartCoroutine(FadeTo(deathPanelImage, targetAlpha, time));
+        StartCoroutine(TextFadeTo(deathPanelText, targetAlpha, time));
     }
 
     private IEnumerator FadeTo(Image img, float aValue, float aTime)

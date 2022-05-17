@@ -14,6 +14,8 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource deathBringerAudioSource;
     [SerializeField] private AudioSource spellsAudioSource;
     [SerializeField] private AudioSource extraSpellsAudioSource;
+    [SerializeField] private AudioSource playerImpactAudioSource;
+    [SerializeField] private AudioSource enemyImpactAudioSource;
 
     [SerializeField] private List<AudioClip> playerRunSounds = new List<AudioClip>();
     [SerializeField] private AudioClip playerSlideSound;
@@ -29,6 +31,13 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip deathBringerExplotionChanneling;
     [SerializeField] private AudioClip deathBringerExplotionSound;
 
+    [SerializeField] private AudioClip deathBringerDeathSound;
+
+    [SerializeField] private List<AudioClip> enemyImpacts = new List<AudioClip>();
+    [SerializeField] private AudioClip playerImpact;
+
+    [SerializeField] private AudioClip defeatStinger;
+
     private float maxMusicVolume = 0.10f; //Chance this to settings later
     private float maxSFXVolume = 0.15f;
 
@@ -41,6 +50,8 @@ public class AudioManager : MonoBehaviour
         deathBringerAudioSource.volume = maxSFXVolume;
         spellsAudioSource.volume = maxSFXVolume;
         extraSpellsAudioSource.volume = maxSFXVolume;
+        playerImpactAudioSource.volume = maxSFXVolume;
+        enemyImpactAudioSource.volume = maxSFXVolume;
 
         musicAudioSource.clip = mainMenuMusic;
         musicAudioSource.loop = true;
@@ -62,6 +73,21 @@ public class AudioManager : MonoBehaviour
 
             playerAudioSource.PlayOneShot(playerRunSounds[rand]);
         }
+    }
+
+    public void PlayEnemyImpact()
+    {
+        int rand = Random.Range(0, enemyImpacts.Count);
+        enemyImpactAudioSource.PlayOneShot(enemyImpacts[rand]);
+    }
+    public void PlayPlayerImpact()
+    {
+        enemyImpactAudioSource.PlayOneShot(playerImpact);
+    }
+
+    public void PlayDeathBringerDeathSound()
+    {
+        deathBringerAudioSource.PlayOneShot(deathBringerDeathSound);
     }
 
     public void PlayDeathBringerTeleportSound()
@@ -97,6 +123,16 @@ public class AudioManager : MonoBehaviour
     public void PlaySlidePlayerSound()
     {
         playerAudioSource.PlayOneShot(playerSlideSound);
+    }
+
+    public IEnumerator PlayDefeatAudio()
+    {
+        StartCoroutine(FadeMusic(0, 2f));
+        yield return new WaitForSeconds(2f);
+        musicAudioSource.Stop();
+        musicAudioSource.volume = maxMusicVolume;
+        musicAudioSource.loop = false;
+        musicAudioSource.PlayOneShot(defeatStinger);
     }
 
     public IEnumerator PlayDeathBringerSpellSound(float duration, float activationTime)

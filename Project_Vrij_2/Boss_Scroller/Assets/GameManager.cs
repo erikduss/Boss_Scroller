@@ -12,6 +12,12 @@ public class GameManager : MonoBehaviour
     [SerializeField] private AudioManager audioManager;
 
     private GameObject playerObject;
+    public bool playerIsAlive = true;
+
+    private Player player;
+
+    [SerializeField] private BoxCollider2D bossFightTrigger;
+    public bool gameStarted = false;
 
     // Start is called before the first frame update
     void Start()
@@ -19,7 +25,8 @@ public class GameManager : MonoBehaviour
         cam = Camera.main.GetComponent<SmoothCamera>();
         uiManager = GetComponent<UIManager>();
         playerObject = GameObject.FindGameObjectWithTag("Player");
-        playerObject.GetComponent<Player>().enabled = false;
+        player = playerObject.GetComponent<Player>();
+        player.enabled = false;
     }
 
     // Update is called once per frame
@@ -30,7 +37,7 @@ public class GameManager : MonoBehaviour
 
     public void StartGame()
     {
-        uiManager.TransitionToGame();
+        uiManager.SetUIButtonStates(false);
         StartCoroutine(GameStart());
     }
 
@@ -44,6 +51,8 @@ public class GameManager : MonoBehaviour
         uiManager.SetAllMainMenuUIImagesAlpha(0f,2.5f);
         StartCoroutine(audioManager.FadeMusic(0f, 2.5f));
         yield return new WaitForSeconds(3f);
+        gameStarted = true;
+        uiManager.SetTutorialText(true);
         uiManager.SetMenuUI(false);
         uiManager.SetPlayerUI(true);
         audioManager.SetTutorialMusic();
@@ -58,5 +67,22 @@ public class GameManager : MonoBehaviour
         StartCoroutine(deathBringerEnemy.ActivateBoss());
         cam.SetStaticCamera(new Vector3(0,0,0));
         uiManager.SetBossUI(true);
+    }
+
+    public IEnumerator GameOver()
+    {
+        uiManager.SetDeathPanelAlpha(1,2f);
+        yield return new WaitForSeconds(2f);
+        cam.target = playerObject.transform;
+        yield return new WaitForSeconds(3f);
+        bossRoomBorders.SetActive(false);
+        player.SetDefaultValues();
+        deathBringerEnemy.ResetToDefaults();
+        StartCoroutine(uiManager.ResetAllUI());
+        StartCoroutine(audioManager.FadeAndChangeMusic(1f, MusicType.MENU));
+        yield return new WaitForSeconds(1f);
+        player.enabled = false;
+        playerIsAlive = true;
+        bossFightTrigger.gameObject.SetActive(true);
     }
 }
