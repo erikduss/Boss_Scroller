@@ -5,7 +5,7 @@ using UnityEngine;
 public class GameManager : MonoBehaviour
 {
     [SerializeField] private GameObject bossRoomBorders;
-    [SerializeField] private DeathBringer deathBringerEnemy;
+    [SerializeField] public DeathBringer deathBringerEnemy;
     private SmoothCamera cam;
     private UIManager uiManager;
 

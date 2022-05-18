@@ -33,6 +33,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	[SerializeField] private GameObject spellBelow;
 	[SerializeField] private GameObject spellAbove;
 	[SerializeField] private GameObject spellBelowBig;
+	[SerializeField] private GameObject healingStatue;
+
+	public float currentAmountOfHealingStatues = 0;
+	private float maxHealingStatues = 2;
 
 	private float attackFatigueTime = 0.5f;
 	private WaitTimer attackFatigueTimer = new WaitTimer();
@@ -51,6 +55,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private GameManager gameManager;
 
 	[SerializeField] private HealthBar healthBar;
+
+	[SerializeField] private ParticleSystem healingFire;
+
+	private bool isDead = false;
 
 	// Use this for initialization
 	void Start()
@@ -79,7 +87,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	void Update()
     {
-		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive) return;
+		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive || isDead) return;
 
         ChooseNewAttack();
 
@@ -88,6 +96,28 @@ public class DeathBringer : MonoBehaviour, IDamageable
             MoveAgent();
         }
     }
+
+	public IEnumerator GainHealing(float healingAmount)
+    {
+		yield return new WaitForSeconds(3f);
+		healingFire.Play();
+		audioManager.PlayHealingFireReceiveSound();
+
+		if (currentHealth > 0 && currentHealth < maxHealth)
+		{
+			currentHealth += healingAmount;
+
+			if (currentHealth > maxHealth)
+			{
+				currentHealth = maxHealth;
+				healthBar.SetHealth(maxHealth);
+			}
+			else
+			{
+				healthBar.IncreaseHealth(healingAmount);
+			}
+		}
+	}
 
 	public void ResetToDefaults()
     {
@@ -98,6 +128,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		combatEnabled = false;
 		rbAI.velocity = Vector2.zero;
 		renderer.flipX = false;
+		isDead = false;
 	}
 
 	public IEnumerator ActivateBoss()
@@ -123,76 +154,167 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		{
 			float randNumber = ChooseRandomAttack();
 
-			if (randNumber >= 65)
-			{
-				SpellAttack();
-			}
-			else if(randNumber < 65 && randNumber > 40)
+			if(currentAmountOfHealingStatues < maxHealingStatues)
             {
-				StartCoroutine(AmbushAttack());
+				if (randNumber >= 70)
+				{
+					SpellAttack();
+				}
+				else if (randNumber < 70 && randNumber > 50)
+				{
+					StartCoroutine(AmbushAttack());
+				}
+				else if (randNumber < 50 && randNumber > 30)
+                {
+					HealingStatueAttack();
+                }
+				else
+				{
+					//prevent the enemy from attemting another attack for some time.
+					attackFatigueTimer.StartTimer(2f);
+				}
 			}
             else
             {
-				//prevent the enemy from attemting another attack for some time.
-				attackFatigueTimer.StartTimer(2f);
-            }
+				if (randNumber >= 65)
+				{
+					SpellAttack();
+				}
+				else if (randNumber < 65 && randNumber > 40)
+				{
+					StartCoroutine(AmbushAttack());
+				}
+				else
+				{
+					//prevent the enemy from attemting another attack for some time.
+					attackFatigueTimer.StartTimer(2f);
+				}
+			}
 		}
         else if(playerDistance() <= minDist)
         {
 			FaceThePlayer();
 
-			//cant hit the player with melee attack anymore
-			if(playerDistance() <= 2f)
+			if(currentAmountOfHealingStatues < maxHealingStatues)
             {
-				float randNumber = ChooseRandomAttack();
-
-				if (randNumber < 20)
+				//cant hit the player with melee attack anymore
+				if (playerDistance() <= 2f)
 				{
-					ExplodeAttack();
-				}
-				else if (randNumber >= 20 && randNumber < 40)
-                {
-					//duration is 3.15 seconds.
-					attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
-					walkFatigueTimer.StartTimer(walkFatigueTime);
-					StartCoroutine(CastBigSpellBelow());
-				}
-				else if (randNumber >= 40 && randNumber < 60)
-                {
-					StartCoroutine(AmbushAttack());
-				}
-				else if (randNumber >= 60 && randNumber < 80)
-                {
-					SpellAttack();
+					float randNumber = ChooseRandomAttack();
+
+					if (randNumber < 20)
+					{
+						ExplodeAttack();
+					}
+					else if (randNumber >= 20 && randNumber < 40)
+					{
+						//duration is 3.15 seconds.
+						attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
+						walkFatigueTimer.StartTimer(walkFatigueTime);
+						StartCoroutine(CastBigSpellBelow());
+					}
+					else if (randNumber >= 40 && randNumber < 60)
+					{
+						StartCoroutine(AmbushAttack());
+					}
+					else if (randNumber >= 60 && randNumber < 75)
+					{
+						SpellAttack();
+					}
+					else if (randNumber >= 75 && randNumber < 90)
+                    {
+						HealingStatueAttack();
+					}
+					else
+					{
+						TeleportAttack();
+					}
 				}
 				else
 				{
-					TeleportAttack();
+					float randNumber = ChooseRandomAttack();
+
+					if (randNumber < 10)
+					{
+						ExplodeAttack();
+					}
+					else if (randNumber >= 10 && randNumber < 45)
+					{
+						MeleeAttack();
+					}
+					else if (randNumber >= 45 && randNumber < 65)
+					{
+						StartCoroutine(AmbushAttack());
+					}
+					else if (randNumber >= 65 && randNumber < 80)
+					{
+						SpellAttack();
+					}
+					else if (randNumber >= 80 && randNumber < 92)
+                    {
+						HealingStatueAttack();
+					}
+					else
+					{
+						TeleportAttack();
+					}
 				}
 			}
-            else
+			else
             {
-				float randNumber = ChooseRandomAttack();
+				//cant hit the player with melee attack anymore
+				if (playerDistance() <= 2f)
+				{
+					float randNumber = ChooseRandomAttack();
 
-				if (randNumber < 10)
-				{
-					ExplodeAttack();
-				}
-				else if (randNumber >= 10 && randNumber < 50)
-				{
-					MeleeAttack();
-				}
-				else if (randNumber >= 50 && randNumber < 70)
-                {
-					StartCoroutine(AmbushAttack());
-				}
-				else if (randNumber >= 70 && randNumber < 90)
-				{
-					SpellAttack();
+					if (randNumber < 20)
+					{
+						ExplodeAttack();
+					}
+					else if (randNumber >= 20 && randNumber < 40)
+					{
+						//duration is 3.15 seconds.
+						attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
+						walkFatigueTimer.StartTimer(walkFatigueTime);
+						StartCoroutine(CastBigSpellBelow());
+					}
+					else if (randNumber >= 40 && randNumber < 60)
+					{
+						StartCoroutine(AmbushAttack());
+					}
+					else if (randNumber >= 60 && randNumber < 80)
+					{
+						SpellAttack();
+					}
+					else
+					{
+						TeleportAttack();
+					}
 				}
 				else
 				{
-					TeleportAttack();
+					float randNumber = ChooseRandomAttack();
+
+					if (randNumber < 10)
+					{
+						ExplodeAttack();
+					}
+					else if (randNumber >= 10 && randNumber < 50)
+					{
+						MeleeAttack();
+					}
+					else if (randNumber >= 50 && randNumber < 70)
+					{
+						StartCoroutine(AmbushAttack());
+					}
+					else if (randNumber >= 70 && randNumber < 90)
+					{
+						SpellAttack();
+					}
+					else
+					{
+						TeleportAttack();
+					}
 				}
 			}
 		}
@@ -213,6 +335,14 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(CastingSpell());
+	}
+
+	//Duration: 2 seconds -> new value 3
+	private void HealingStatueAttack()
+	{
+		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
+		walkFatigueTimer.StartTimer(walkFatigueTime);
+		StartCoroutine(SummoningingHealingStatue());
 	}
 
 	//Duration: 3 seconds
@@ -423,6 +553,53 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		StartCoroutine(audioManager.PlayDeathBringerSpellSound(3.65f, 2f));
 	}
 
+
+	private void SummonHealingStatue()
+    {
+		float minX = -10;
+		float maxX = 10;
+
+		float minimumCastRange = 3f;
+
+		bool canCastLeft = false;
+		bool canCastRight = false;
+
+		if (transform.position.x > (minX + minimumCastRange)) canCastLeft = true;
+		if (transform.position.x < (maxX - minimumCastRange)) canCastRight = true;
+
+		Vector3 castLocation = new Vector3(transform.position.x, transform.position.y, 0);
+
+		if (canCastRight && canCastLeft)
+		{
+			int rand = Random.Range(0, 2);
+
+			if (rand == 0) //We're casting to the left Side
+			{
+				float randomX = Random.Range((transform.position.x - minimumCastRange), (minX + minimumCastRange));
+				castLocation.x = randomX;
+			}
+			else
+			{
+				float randomX = Random.Range((transform.position.x + minimumCastRange), (maxX - minimumCastRange));
+				castLocation.x = randomX;
+			}
+		}
+		else if (canCastLeft)
+		{
+			float randomX = Random.Range((transform.position.x - minimumCastRange), (minX + minimumCastRange));
+			castLocation.x = randomX;
+		}
+		else
+		{
+			float randomX = Random.Range((transform.position.x + minimumCastRange), (maxX - minimumCastRange));
+			castLocation.x = randomX;
+		}
+
+		castLocation.y = -4.1f;
+		GameObject.Instantiate(healingStatue, castLocation, healingStatue.transform.rotation);
+		currentAmountOfHealingStatues++;
+	}
+
 	private Vector3 PickRandomTeleportLocation()
     {
 		float minX = -10;
@@ -485,18 +662,31 @@ public class DeathBringer : MonoBehaviour, IDamageable
 			}
             else
             {
+				isDead = true;
 				boxCollider.enabled = false;
 				audioManager.PlayDeathBringerDeathSound();
 				animator.Play("Death");
+				StartCoroutine(deathBringerDied());
 			}
 		}
         else
         {
-			boxCollider.enabled = false;
-			audioManager.PlayDeathBringerDeathSound();
-			animator.Play("Death");
+            if (!isDead)
+            {
+				isDead = true;
+				boxCollider.enabled = false;
+				audioManager.PlayDeathBringerDeathSound();
+				animator.Play("Death");
+				StartCoroutine(deathBringerDied());
+			}
 		}
 	}
+
+	private IEnumerator deathBringerDied()
+    {
+		yield return new WaitForSeconds(1);
+		this.gameObject.SetActive(false);
+    }
 
 	public void setSpeed(float val)
 	{
@@ -579,6 +769,16 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(1);
 	}
 
+	private IEnumerator SummoningingHealingStatue()
+	{
+		rbAI.velocity = Vector2.zero;
+		audioManager.PlayDeathBringerSpellAttackSound();
+		animator.Play("summonHealingStatue");
+		yield return new WaitForSeconds(1.2f);
+		SummonHealingStatue();
+		yield return new WaitForSeconds(1);
+	}
+
 	private IEnumerator Melee()
     {
 		rbAI.velocity = Vector2.zero;
@@ -619,7 +819,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		meleeAttackTrigger.transform.gameObject.SetActive(false);
 		yield return new WaitForSeconds(.45f);
 
-		animator.Play("Idle");
+		//animator.Play("Idle"); not needed?
 		yield return new WaitForSeconds(0.5f);
 	}
 
@@ -649,9 +849,6 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		animator.Play("AOE-Explode");
 		audioManager.PlayDeathBringerExplotionChannelSound();
 
-		Color initialColor = renderer.color;
-		Color targetColor = Color.red;
-
 		currentStrength = strength;
 
 		float elapsedTime = 0f;
@@ -662,7 +859,6 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		while (elapsedTime < 0.75f)
 		{
 			elapsedTime += Time.deltaTime;
-			renderer.color = Color.Lerp(initialColor, targetColor, elapsedTime / 0.75f);
 			explosion_Indicator.transform.localScale = new Vector3(Mathf.Lerp(0, 1.5f, elapsedTime / 0.75f), Mathf.Lerp(0, 1.5f, elapsedTime / 0.75f), 1);
 			yield return null;
 		}
@@ -672,7 +868,6 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		while (elapsedTime < 0.75f)
 		{
 			elapsedTime += Time.deltaTime;
-			renderer.color = Color.Lerp(targetColor, initialColor, elapsedTime / 0.75f);
 			explosion_Indicator.transform.localScale = new Vector3(Mathf.Lerp(1.5f, 0, elapsedTime / 0.75f), Mathf.Lerp(1.5f, 0, elapsedTime / 0.75f), 1);
 			yield return null;
 		}
@@ -685,7 +880,6 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		while (elapsedTime < 0.75f)
 		{
 			elapsedTime += Time.deltaTime;
-			renderer.color = Color.Lerp(initialColor, targetColor, elapsedTime / 0.75f);
 			explosion_Indicator.transform.localScale = new Vector3(Mathf.Lerp(0, 2.5f, elapsedTime / 0.75f), Mathf.Lerp(0, 2.5f, elapsedTime / 0.75f), 1);
 			yield return null;
 		}
@@ -695,17 +889,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		while (elapsedTime < 0.75f)
 		{
 			elapsedTime += Time.deltaTime;
-			renderer.color = Color.Lerp(targetColor, initialColor, elapsedTime / 0.75f);
 			explosion_Indicator.transform.localScale = new Vector3(Mathf.Lerp(2.5f, 0, elapsedTime / 0.75f), Mathf.Lerp(2.5f, 0, elapsedTime / 0.75f), 1);
-			yield return null;
-		}
-
-		elapsedTime = 0;
-
-		while (elapsedTime < 0.75f)
-		{
-			elapsedTime += Time.deltaTime;
-			renderer.color = Color.Lerp(initialColor, targetColor, elapsedTime / 0.75f);
 			yield return null;
 		}
 
@@ -746,11 +930,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		//reset everything to normal
 		explosion_Indicator.SetActive(false);
 		explosion_Indicator.GetComponent<SpriteRenderer>().color = Color.red;
-		renderer.color = initialColor;
 
 		Vector3 locationToAppearAt = transform.position;
 
-		if(ChooseRandomAttack() > 65)
+		if(ChooseRandomAttack() > 65f)
         {
 			locationToAppearAt = PickRandomTeleportLocation();
 		}

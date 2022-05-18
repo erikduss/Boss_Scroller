@@ -16,6 +16,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource extraSpellsAudioSource;
     [SerializeField] private AudioSource playerImpactAudioSource;
     [SerializeField] private AudioSource enemyImpactAudioSource;
+    [SerializeField] private AudioSource statueSpells;
 
     [SerializeField] private List<AudioClip> playerRunSounds = new List<AudioClip>();
     [SerializeField] private AudioClip playerSlideSound;
@@ -32,6 +33,9 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip deathBringerExplotionSound;
 
     [SerializeField] private AudioClip deathBringerDeathSound;
+
+    [SerializeField] private AudioClip healingFireSound;
+    [SerializeField] private AudioClip healingFireReceiveSound;
 
     [SerializeField] private List<AudioClip> enemyImpacts = new List<AudioClip>();
     [SerializeField] private AudioClip playerImpact;
@@ -70,6 +74,7 @@ public class AudioManager : MonoBehaviour
         extraSpellsAudioSource.volume = maxSFXVolume;
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
+        statueSpells.volume = maxSFXVolume;
 
         musicAudioSource.clip = mainMenuMusic;
         musicAudioSource.loop = true;
@@ -139,6 +144,7 @@ public class AudioManager : MonoBehaviour
         extraSpellsAudioSource.volume = maxSFXVolume;
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
+        statueSpells.volume = maxSFXVolume;
 
         musicAudioSource.volume = maxMusicVolume;
     }
@@ -154,6 +160,7 @@ public class AudioManager : MonoBehaviour
         extraSpellsAudioSource.volume = maxSFXVolume;
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
+        statueSpells.volume = maxSFXVolume;
 
         musicAudioSource.volume = maxMusicVolume;
     }
@@ -210,12 +217,22 @@ public class AudioManager : MonoBehaviour
 
     public void PlayDeathBringerExplotionSound()
     {
+        spellsAudioSource.Stop();
         spellsAudioSource.PlayOneShot(deathBringerExplotionSound);
     }
 
     public void PlaySlidePlayerSound()
     {
         playerAudioSource.PlayOneShot(playerSlideSound);
+    }
+
+    public void PlayHealingFireSound()
+    {
+        statueSpells.PlayOneShot(healingFireSound);
+    }
+    public void PlayHealingFireReceiveSound()
+    {
+        statueSpells.PlayOneShot(healingFireReceiveSound);
     }
 
     public IEnumerator PlayDefeatAudio()
@@ -242,6 +259,7 @@ public class AudioManager : MonoBehaviour
         yield return new WaitForSeconds(0.75f);
         spellsAudioSource.loop = false;
         spellsAudioSource.Stop();
+        spellsAudioSource.volume = maxSFXVolume;
     }
 
     public void PlayPlayerAttackSound()
