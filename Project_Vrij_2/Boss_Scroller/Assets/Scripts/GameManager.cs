@@ -27,6 +27,9 @@ public class GameManager : MonoBehaviour
         playerObject = GameObject.FindGameObjectWithTag("Player");
         player = playerObject.GetComponent<Player>();
         player.enabled = false;
+
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     // Update is called once per frame
@@ -38,6 +41,8 @@ public class GameManager : MonoBehaviour
     public void StartGame()
     {
         uiManager.SetUIButtonStates(false);
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
         StartCoroutine(GameStart());
     }
 
@@ -69,6 +74,12 @@ public class GameManager : MonoBehaviour
         uiManager.SetBossUI(true);
     }
 
+    private void EnableCursor()
+    {
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+    }
+
     public IEnumerator DeathBringerDefeated()
     {
         uiManager.SetBossUI(false);
@@ -87,6 +98,7 @@ public class GameManager : MonoBehaviour
         player.enabled = false;
         playerIsAlive = true;
         bossFightTrigger.gameObject.SetActive(true);
+        EnableCursor();
     }
 
     public IEnumerator GameOver()
@@ -104,5 +116,6 @@ public class GameManager : MonoBehaviour
         player.enabled = false;
         playerIsAlive = true;
         bossFightTrigger.gameObject.SetActive(true);
+        EnableCursor();
     }
 }

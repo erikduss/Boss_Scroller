@@ -51,8 +51,9 @@ public class DeathBringerSpell : MonoBehaviour
         spellCollider.size = new Vector2(0.323f, 0.157f);
 
         StartCoroutine(FadeTo(0, 1));
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         spellCollider.enabled = false;
+        yield return new WaitForSeconds(0.5f);
         Destroy(this.gameObject);
         //spell ends
     }

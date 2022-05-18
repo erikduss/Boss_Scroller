@@ -42,7 +42,7 @@ public class DeathBringerStatue : MonoBehaviour, IDamageable
     // Update is called once per frame
     void Update()
     {
-        if (deathBringer.isDead)
+        if (deathBringer.isDead || !gameManager.playerIsAlive)
         {
             isAlive = false;
             StartCoroutine(DestroyObject());
