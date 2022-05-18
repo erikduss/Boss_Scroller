@@ -57,8 +57,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	[SerializeField] private HealthBar healthBar;
 
 	[SerializeField] private ParticleSystem healingFire;
+	private List<GameObject> spawnedHealingStatues = new List<GameObject>();
 
-	private bool isDead = false;
+	public bool isDead = false;
 
 	// Use this for initialization
 	void Start()
@@ -122,13 +123,18 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	public void ResetToDefaults()
     {
 		currentHealth = maxHealth;
+		currentStrength = strength;
+		boxCollider.enabled = true;
 		healthBar.SetUpHealthBar(maxHealth);
 		animator.Play("Idle");
 		transform.position = startPos;
 		combatEnabled = false;
 		rbAI.velocity = Vector2.zero;
 		renderer.flipX = false;
+		renderer.enabled = true;
 		isDead = false;
+		currentAmountOfHealingStatues = 0;
+		spawnedHealingStatues.Clear();
 	}
 
 	public IEnumerator ActivateBoss()
@@ -596,7 +602,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		}
 
 		castLocation.y = -4.1f;
-		GameObject.Instantiate(healingStatue, castLocation, healingStatue.transform.rotation);
+		GameObject statueToSpawn = healingStatue;
+		statueToSpawn.name = "Healing Statue";
+		spawnedHealingStatues.Add(statueToSpawn);
+		GameObject.Instantiate(statueToSpawn, castLocation, statueToSpawn.transform.rotation);
 		currentAmountOfHealingStatues++;
 	}
 
@@ -664,6 +673,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
             {
 				isDead = true;
 				boxCollider.enabled = false;
+				StopAllCoroutines();
 				audioManager.PlayDeathBringerDeathSound();
 				animator.Play("Death");
 				StartCoroutine(deathBringerDied());
@@ -675,6 +685,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
             {
 				isDead = true;
 				boxCollider.enabled = false;
+				StopAllCoroutines();
 				audioManager.PlayDeathBringerDeathSound();
 				animator.Play("Death");
 				StartCoroutine(deathBringerDied());
@@ -685,8 +696,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private IEnumerator deathBringerDied()
     {
 		yield return new WaitForSeconds(1);
-		this.gameObject.SetActive(false);
-    }
+		renderer.enabled = false;
+		StartCoroutine(gameManager.DeathBringerDefeated());
+		yield return new WaitForSeconds(2);
+	}
 
 	public void setSpeed(float val)
 	{

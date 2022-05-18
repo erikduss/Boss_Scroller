@@ -165,6 +165,18 @@ public class AudioManager : MonoBehaviour
         musicAudioSource.volume = maxMusicVolume;
     }
 
+    public void StopAllSoundEffects()
+    {
+        playerAudioSource.Stop();
+        deathBringerAudioSource.Stop();
+        spellsAudioSource.Stop();
+        spellsAudioSource.loop = false;
+        extraSpellsAudioSource.Stop();
+        playerImpactAudioSource.Stop();
+        enemyImpactAudioSource.Stop();
+        statueSpells.Stop();
+    }
+
     public void PlayMovementPlayerSound()
     {
         if (!playerAudioSource.isPlaying)

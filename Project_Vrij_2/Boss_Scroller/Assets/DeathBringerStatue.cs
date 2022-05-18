@@ -42,6 +42,12 @@ public class DeathBringerStatue : MonoBehaviour, IDamageable
     // Update is called once per frame
     void Update()
     {
+        if (deathBringer.isDead)
+        {
+            isAlive = false;
+            StartCoroutine(DestroyObject());
+        }
+
         if (buffTimer.TimerFinished() && isAlive)
         {
             if(!healingFire.gameObject.activeInHierarchy) healingFire.gameObject.SetActive(true);

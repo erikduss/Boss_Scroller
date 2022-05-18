@@ -31,6 +31,10 @@ public class UIManager : MonoBehaviour
     private Image deathPanelImage;
     [SerializeField] private TextMeshProUGUI deathPanelText;
 
+    [SerializeField] private GameObject endDemoPanel;
+    private Image endDemoImage;
+    [SerializeField] private TextMeshProUGUI endDemoText;
+
     [SerializeField] private List<TextMeshProUGUI> tutorialText;
 
     [SerializeField] private AudioManager audioManager;
@@ -41,6 +45,7 @@ public class UIManager : MonoBehaviour
         PlayerUI.SetActive(false);
         BossUI.SetActive(false);
         deathPanelImage = deathPanel.GetComponent<Image>();
+        endDemoImage = endDemoPanel.GetComponent<Image>();
 
         audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
 
@@ -125,12 +130,14 @@ public class UIManager : MonoBehaviour
     {
         SetAllMainMenuUIImagesAlpha(1,0.1f);
         SetDeathPanelAlpha(0,1f);
+        SetEndDemoPanelAlpha(0,1f);
         SetPlayerUI(true);
         SetBossUI(false);
         SetMenuUI(true);
         SetUIButtonStates(true);
         yield return new WaitForSeconds(1);
         deathPanel.SetActive(false);
+        endDemoPanel.SetActive(false);
     }
 
     public void SetUIButtonStates(bool state)
@@ -159,6 +166,13 @@ public class UIManager : MonoBehaviour
         {
             StartCoroutine(TextFadeTo(txt, targetAlpha, time));
         }
+    }
+
+    public void SetEndDemoPanelAlpha(float targetAlpha, float time)
+    {
+        endDemoPanel.SetActive(true);
+        StartCoroutine(FadeTo(endDemoImage, targetAlpha, time));
+        StartCoroutine(TextFadeTo(endDemoText, targetAlpha, time));
     }
 
     public void SetDeathPanelAlpha(float targetAlpha, float time)

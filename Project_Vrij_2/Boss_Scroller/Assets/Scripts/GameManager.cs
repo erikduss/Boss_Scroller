@@ -69,6 +69,26 @@ public class GameManager : MonoBehaviour
         uiManager.SetBossUI(true);
     }
 
+    public IEnumerator DeathBringerDefeated()
+    {
+        uiManager.SetBossUI(false);
+        audioManager.StopAllSoundEffects();
+        yield return new WaitForSeconds(5f);
+        uiManager.SetEndDemoPanelAlpha(1,2f);
+        yield return new WaitForSeconds(2f);
+        cam.target = playerObject.transform;
+        yield return new WaitForSeconds(3f);
+        bossRoomBorders.SetActive(false);
+        player.SetDefaultValues();
+        deathBringerEnemy.ResetToDefaults();
+        StartCoroutine(uiManager.ResetAllUI());
+        StartCoroutine(audioManager.FadeAndChangeMusic(1f, MusicType.MENU));
+        yield return new WaitForSeconds(1f);
+        player.enabled = false;
+        playerIsAlive = true;
+        bossFightTrigger.gameObject.SetActive(true);
+    }
+
     public IEnumerator GameOver()
     {
         uiManager.SetDeathPanelAlpha(1,2f);
