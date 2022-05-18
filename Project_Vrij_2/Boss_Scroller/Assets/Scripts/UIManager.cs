@@ -15,11 +15,25 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private GameObject menuUIPanel;
 
+    [SerializeField] private GameObject mainMenuPanel;
+    [SerializeField] private GameObject optionsMenuPanel;
+
+    [SerializeField] private Slider musicVolumeSlider;
+    [SerializeField] private Slider generalVolumeSlider;
+
+    private float lastKnownMusicVolume;
+    private float lastKnownGeneralVolume;
+
+    [SerializeField] private TextMeshProUGUI musicVolumePercentage;
+    [SerializeField] private TextMeshProUGUI generalVolumePercentage;
+
     [SerializeField] private GameObject deathPanel;
     private Image deathPanelImage;
     [SerializeField] private TextMeshProUGUI deathPanelText;
 
     [SerializeField] private List<TextMeshProUGUI> tutorialText;
+
+    [SerializeField] private AudioManager audioManager;
 
     // Start is called before the first frame update
     void Start()
@@ -28,13 +42,83 @@ public class UIManager : MonoBehaviour
         BossUI.SetActive(false);
         deathPanelImage = deathPanel.GetComponent<Image>();
 
+        audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
+
         SetTutorialText(false);
+
+        optionsMenuPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    public void SliderValueChanged()
+    {
+        if (musicVolumeSlider.value != lastKnownMusicVolume || generalVolumeSlider.value != lastKnownGeneralVolume)
+        {
+            audioManager.TestOutNewValues(musicVolumeSlider.value, generalVolumeSlider.value);
+            lastKnownMusicVolume = musicVolumeSlider.value;
+            lastKnownGeneralVolume = generalVolumeSlider.value;
+
+            musicVolumePercentage.text = Mathf.Floor(musicVolumeSlider.value * 100) + "%";
+            generalVolumePercentage.text = Mathf.Floor(generalVolumeSlider.value * 100) + "%";
+        }
+    }
+
+    public void OpenOptions()
+    {
+        optionsMenuPanel.SetActive(true);
+        mainMenuPanel.SetActive(false);
+
+        if (!PlayerPrefs.HasKey("MusicVolume"))
+        {
+            PlayerPrefs.SetFloat("MusicVolume", 0.10f);
+            PlayerPrefs.Save();
+        }
+
+        if (!PlayerPrefs.HasKey("GeneralVolume"))
+        {
+            PlayerPrefs.SetFloat("GeneralVolume", 0.15f);
+            PlayerPrefs.Save();
+        }
+
+        musicVolumeSlider.value = PlayerPrefs.GetFloat("MusicVolume");
+        generalVolumeSlider.value = PlayerPrefs.GetFloat("GeneralVolume");
+
+        lastKnownMusicVolume = musicVolumeSlider.value;
+        lastKnownGeneralVolume = generalVolumeSlider.value;
+
+        musicVolumePercentage.text = Mathf.Floor(musicVolumeSlider.value * 100) + "%";
+        generalVolumePercentage.text = Mathf.Floor(generalVolumeSlider.value * 100) + "%";
+    }
+
+    public void SaveOptions()
+    {
+        float valueMusic = musicVolumeSlider.value;
+        float valueGeneral = generalVolumeSlider.value;
+
+        PlayerPrefs.SetFloat("GeneralVolume", valueGeneral);
+        PlayerPrefs.SetFloat("MusicVolume", valueMusic);
+        PlayerPrefs.Save();
+
+        audioManager.UpdateAudioVolumes();
+    }
+
+    public void BackToMenu()
+    {
+        audioManager.UpdateAudioVolumes();
+
+        optionsMenuPanel.SetActive(false);
+        mainMenuPanel.SetActive(true);
+    }
+
+    public void TestOutCurrentGeneralVolume()
+    {
+        audioManager.TestOutSFXAudio();
     }
 
     public IEnumerator ResetAllUI()

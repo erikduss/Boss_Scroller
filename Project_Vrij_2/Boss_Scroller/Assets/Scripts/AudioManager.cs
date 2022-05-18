@@ -38,8 +38,26 @@ public class AudioManager : MonoBehaviour
 
     [SerializeField] private AudioClip defeatStinger;
 
-    private float maxMusicVolume = 0.10f; //Chance this to settings later
-    private float maxSFXVolume = 0.15f;
+    private float maxMusicVolume;
+    private float maxSFXVolume;
+
+    private void Awake()
+    {
+        if (!PlayerPrefs.HasKey("MusicVolume"))
+        {
+            PlayerPrefs.SetFloat("MusicVolume", 0.10f);
+            PlayerPrefs.Save();
+        }
+
+        if (!PlayerPrefs.HasKey("GeneralVolume"))
+        {
+            PlayerPrefs.SetFloat("GeneralVolume", 0.15f);
+            PlayerPrefs.Save();
+        }
+
+        maxMusicVolume = PlayerPrefs.GetFloat("MusicVolume");
+        maxSFXVolume = PlayerPrefs.GetFloat("GeneralVolume");
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -63,6 +81,81 @@ public class AudioManager : MonoBehaviour
     void Update()
     {
         
+    }
+
+    public void TestOutSFXAudio()
+    {
+        int rand = Random.Range(0,12);
+
+        switch (rand)
+        {
+            case 0:
+                PlayMovementPlayerSound();
+                break;
+            case 1:
+                PlayEnemyImpact();
+                break;
+            case 2:
+                PlayPlayerImpact();
+                break;
+            case 3:
+                PlayDeathBringerDeathSound();
+                break;
+            case 4:
+                PlayDeathBringerTeleportSound();
+                break;
+            case 5:
+                PlayDeathBringerAttackSound();
+                break;
+            case 6:
+                PlayDeathBringerSpellAttackSound();
+                break;
+            case 7:
+                PlayDeathBringerSwingSound();
+                break;
+            case 8:
+                PlayDeathBringerExplotionChannelSound();
+                break;
+            case 9:
+                PlayDeathBringerExplotionSound();
+                break;
+            case 10:
+                PlaySlidePlayerSound();
+                break;
+            case 11:
+                PlayPlayerAttackSound();
+                break;
+        }
+    }
+
+    public void UpdateAudioVolumes()
+    {
+        maxMusicVolume = PlayerPrefs.GetFloat("MusicVolume");
+        maxSFXVolume = PlayerPrefs.GetFloat("GeneralVolume");
+
+        playerAudioSource.volume = maxSFXVolume;
+        deathBringerAudioSource.volume = maxSFXVolume;
+        spellsAudioSource.volume = maxSFXVolume;
+        extraSpellsAudioSource.volume = maxSFXVolume;
+        playerImpactAudioSource.volume = maxSFXVolume;
+        enemyImpactAudioSource.volume = maxSFXVolume;
+
+        musicAudioSource.volume = maxMusicVolume;
+    }
+
+    public void TestOutNewValues(float music, float sfx)
+    {
+        maxMusicVolume = music;
+        maxSFXVolume = sfx;
+
+        playerAudioSource.volume = maxSFXVolume;
+        deathBringerAudioSource.volume = maxSFXVolume;
+        spellsAudioSource.volume = maxSFXVolume;
+        extraSpellsAudioSource.volume = maxSFXVolume;
+        playerImpactAudioSource.volume = maxSFXVolume;
+        enemyImpactAudioSource.volume = maxSFXVolume;
+
+        musicAudioSource.volume = maxMusicVolume;
     }
 
     public void PlayMovementPlayerSound()
@@ -137,12 +230,16 @@ public class AudioManager : MonoBehaviour
 
     public IEnumerator PlayDeathBringerSpellSound(float duration, float activationTime)
     {
+        spellsAudioSource.volume = 0;
         spellsAudioSource.loop = true;
         spellsAudioSource.clip = deathBringerSpellCloud;
         spellsAudioSource.Play();
+        StartCoroutine(FadeSpell(maxSFXVolume, 0.75f));
         yield return new WaitForSeconds(activationTime);
         extraSpellsAudioSource.PlayOneShot(deathBringerSpellActivation);
-        yield return new WaitForSeconds(duration - activationTime);
+        yield return new WaitForSeconds((duration - activationTime)-0.75f);
+        StartCoroutine(FadeSpell(0, 0.75f));
+        yield return new WaitForSeconds(0.75f);
         spellsAudioSource.loop = false;
         spellsAudioSource.Stop();
     }
@@ -184,6 +281,21 @@ public class AudioManager : MonoBehaviour
         {
             elapsedTime += Time.deltaTime;
             musicAudioSource.volume = Mathf.Lerp(initialVolume, volume, elapsedTime / time);
+            yield return null;
+        }
+    }
+
+    public IEnumerator FadeSpell(float volume, float time)
+    {
+        float initialVolume = spellsAudioSource.volume;
+        if (volume > maxSFXVolume) volume = maxSFXVolume;
+
+        float elapsedTime = 0;
+
+        while (elapsedTime < time)
+        {
+            elapsedTime += Time.deltaTime;
+            spellsAudioSource.volume = Mathf.Lerp(initialVolume, volume, elapsedTime / time);
             yield return null;
         }
     }
