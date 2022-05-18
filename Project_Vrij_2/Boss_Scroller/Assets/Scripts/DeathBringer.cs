@@ -8,6 +8,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private float currentHealth = 1000;
 	
 	private float strength = 15;
+	private float currentStrength = 15;
 
 	private float regenRate = 3f;
 	private float stamina = 500f;
@@ -32,8 +33,6 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	[SerializeField] private GameObject spellBelow;
 	[SerializeField] private GameObject spellAbove;
 	[SerializeField] private GameObject spellBelowBig;
-
-	private List<GameObject> castSpells = new List<GameObject>();
 
 	private float attackFatigueTime = 0.5f;
 	private WaitTimer attackFatigueTimer = new WaitTimer();
@@ -153,7 +152,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				}
 				else if (randNumber >= 20 && randNumber < 40)
                 {
-					attackFatigueTimer.StartTimer(RandomFatigueTime(7f, 8.5f));
+					//duration is 3.15 seconds.
+					attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
 					walkFatigueTimer.StartTimer(walkFatigueTime);
 					StartCoroutine(CastBigSpellBelow());
 				}
@@ -207,10 +207,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		StartCoroutine(Explode());
 	}
 
-	//Duration: 2 seconds
+	//Duration: 2 seconds -> new value 3
 	private void SpellAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(2f + attackFatigueTime, 3f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(CastingSpell());
 	}
@@ -224,10 +224,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		StartCoroutine(Teleport(PickRandomTeleportLocation()));
 	}
 
-	//Duration: 3.05 seconds
+	//Duration: 3.05 seconds -> new length = 2.35 (0.7 faster, 0.2 in animation and 0.5 in end recovery)
 	private void MeleeAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(3.05f + attackFatigueTime, 5.05f + attackFatigueTime));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(2.35f + attackFatigueTime, 4.05f + attackFatigueTime));
 		walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(Melee());
 	}
@@ -332,7 +332,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		castLocation.y = spellBelow.transform.position.y;
 		GameObject.Instantiate(spellBelowBig, castLocation, spellBelow.transform.rotation);
 
-		StartCoroutine(audioManager.PlayDeathBringerSpellSound(3.25f, 1.2f));
+		StartCoroutine(audioManager.PlayDeathBringerSpellSound(3.15f, 1.5f));
 	}
 
 	private void CastSpell(int amountOfSpells)
@@ -349,6 +349,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		if (transform.position.x < (maxX - minimumCastRange)) canCastRight = true;
 
 		Vector3 castLocation = new Vector3(transform.position.x, transform.position.y, 0);
+
+		List<float> xLocationsSpawnedSpells = new List<float>();
 
 		for (int i = 0; i< amountOfSpells; i++)
         {
@@ -378,21 +380,47 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				castLocation.x = randomX;
 			}
 
-			int randObject = Random.Range(0, 2);
-			if(randObject == 0)
+			bool canCastOnThisLocation = true;
+
+			if (xLocationsSpawnedSpells.Count > 0)
             {
-				castLocation.y = spellBelow.transform.position.y;
-				GameObject.Instantiate(spellBelow, castLocation, spellBelow.transform.rotation);
+				for (int t = 0; t < xLocationsSpawnedSpells.Count; t++)
+				{
+					if (Mathf.Abs(xLocationsSpawnedSpells[t] - castLocation.x) < 1.5f)
+					{
+						canCastOnThisLocation = false;
+						break;
+					}
+				}
+			}
+
+            if (canCastOnThisLocation)
+            {
+				int randObject = Random.Range(0, 2);
+
+				xLocationsSpawnedSpells.Add(castLocation.x);
+
+				if (randObject == 0)
+				{
+					castLocation.y = spellBelow.transform.position.y;
+					GameObject.Instantiate(spellBelow, castLocation, spellBelow.transform.rotation);
+				}
+				else
+				{
+					castLocation.y = spellAbove.transform.position.y;
+					GameObject.Instantiate(spellAbove, castLocation, spellAbove.transform.rotation);
+				}
 			}
             else
             {
-				castLocation.y = spellAbove.transform.position.y;
-				GameObject.Instantiate(spellAbove, castLocation, spellAbove.transform.rotation);
-
-			}
+				if(amountOfSpells < 50)
+                {
+					amountOfSpells++;
+				}
+            }
 		}
 
-		StartCoroutine(audioManager.PlayDeathBringerSpellSound(4f, 2f));
+		StartCoroutine(audioManager.PlayDeathBringerSpellSound(3.65f, 2f));
 	}
 
 	private Vector3 PickRandomTeleportLocation()
@@ -556,7 +584,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		rbAI.velocity = Vector2.zero;
 		audioManager.PlayDeathBringerAttackSound();
 		animator.Play("Attack");
-		yield return new WaitForSeconds(1.3f);
+		currentStrength = strength;
+
+		yield return new WaitForSeconds(1.1f);
 		audioManager.PlayDeathBringerSwingSound();
 		meleeAttackTrigger.transform.gameObject.SetActive(true);
         if (!renderer.flipX)
@@ -590,7 +620,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(.45f);
 
 		animator.Play("Idle");
-		yield return new WaitForSeconds(1f);
+		yield return new WaitForSeconds(0.5f);
 	}
 
 	private IEnumerator Teleport(Vector3 teleportLocation)
@@ -622,6 +652,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		Color initialColor = renderer.color;
 		Color targetColor = Color.red;
 
+		currentStrength = strength;
+
 		float elapsedTime = 0f;
 
 		Vector3 explosionSize = explosion_Indicator.transform.localScale;
@@ -647,6 +679,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 		elapsedTime = 0;
 		audioManager.PlayDeathBringerExplotionChannelSound();
+
+		currentStrength = strength * 2;
 
 		while (elapsedTime < 0.75f)
 		{
@@ -679,6 +713,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 		explosion_Indicator.GetComponent<BoxCollider2D>().enabled = true;
 
+		currentStrength = strength * 3;
+
 		audioManager.PlayDeathBringerExplotionSound();
 		animator.Play("AOE-Explode-End");
 
@@ -690,14 +726,15 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		}
 
 		elapsedTime = 0;
+		float shrinkTime = 0.35f; //was normally 0.75f
 
-		while (elapsedTime < 0.75f)
+		while (elapsedTime < shrinkTime)
 		{
 			elapsedTime += Time.deltaTime;
 			Color colorToLerpTo = Color.red;
 			colorToLerpTo.a = 0;
-			explosion_Indicator.GetComponent<SpriteRenderer>().color = Color.Lerp(Color.red, colorToLerpTo, elapsedTime / 0.75f);
-			renderer.color = Color.Lerp(Color.red, colorToLerpTo, elapsedTime / 0.75f);
+			explosion_Indicator.GetComponent<SpriteRenderer>().color = Color.Lerp(Color.red, colorToLerpTo, elapsedTime / shrinkTime);
+			renderer.color = Color.Lerp(Color.red, colorToLerpTo, elapsedTime / shrinkTime);
 			yield return null;
 		}
 
@@ -732,7 +769,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	{
 		if (triggerCollision.gameObject.tag == "Player")
 		{
-			triggerCollision.gameObject.GetComponent<IDamageable>().TakeDamage(strength);
+			triggerCollision.gameObject.GetComponent<IDamageable>().TakeDamage(currentStrength);
 		}
 	}
 }

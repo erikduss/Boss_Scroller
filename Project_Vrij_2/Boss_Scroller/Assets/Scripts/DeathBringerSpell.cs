@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class DeathBringerSpell : MonoBehaviour
 {
-    private float spellDamage = 25;
+    private float spellDamage = 15;
     private SpriteRenderer renderer;
     private Animator anim;
 
@@ -31,12 +31,13 @@ public class DeathBringerSpell : MonoBehaviour
         yield return new WaitForSeconds(1f);
         spellCollider.enabled = true;
 
-        float waitTime = 1.6f;
+        float waitTime = 1f;
 
         if (isFastSpell)
         {
+            spellDamage = spellDamage * 2;
             anim.speed = 2;
-            waitTime = 0.8f;
+            waitTime = 0.5f;
         }
 
         yield return new WaitForSeconds(waitTime);
