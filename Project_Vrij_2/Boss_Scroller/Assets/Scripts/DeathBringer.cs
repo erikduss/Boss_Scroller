@@ -831,7 +831,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		animator.Play("Attack");
 		currentStrength = strength;
 
-		yield return new WaitForSeconds(1.1f);
+		yield return new WaitForSeconds(0.6f);
 		audioManager.PlayDeathBringerSwingSound();
 		meleeAttackTrigger.transform.gameObject.SetActive(true);
         if (!renderer.flipX)
