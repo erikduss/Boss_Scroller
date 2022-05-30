@@ -13,12 +13,8 @@ public class Wolf : Enemy, IDamageable {
 		regenRate = .5f;
 		maxStamina = 100f;
 
-		terminalSpeed = speed / 10;
-		initialSpeed = (speed / 10) / 2;
-		acceleration = (speed / 10) / 4;
-
 		animator = GetComponent<Animator> ();
-		player = GameObject.FindGameObjectWithTag("Player");
+		target = GameObject.FindGameObjectWithTag("Player");
 
 	}
 

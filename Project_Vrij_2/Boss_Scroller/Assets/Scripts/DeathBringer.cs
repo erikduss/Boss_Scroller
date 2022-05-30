@@ -38,7 +38,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	public float currentAmountOfHealingStatues = 0;
 	private float maxHealingStatues = 2;
 
-	private float attackFatigueTime = 0.5f;
+	private float attackFatigueTime = 1f;
 	private WaitTimer attackFatigueTimer = new WaitTimer();
 
 	private float walkFatigueTime = 2f;
@@ -60,6 +60,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private List<GameObject> spawnedHealingStatues = new List<GameObject>();
 
 	public bool isDead = false;
+
+	private bool attacking = false;
 
 	// Use this for initialization
 	void Start()
@@ -83,12 +85,16 @@ public class DeathBringer : MonoBehaviour, IDamageable
 			healthBar.SetUpHealthBar(maxHealth);
 		}
 
-		attackFatigueTimer.StartTimer(RandomFatigueTime(1.4f, 4.7f));
+		attackFatigueTimer.StartTimer(RandomFatigueTime(1.4f, 2.7f));
 	}
 
 	void Update()
     {
-		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive || isDead) return;
+		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive || isDead || attacking)
+		{
+			rbAI.velocity = Vector2.zero;
+			return;
+		}
 
         ChooseNewAttack();
 
@@ -215,8 +221,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 					else if (randNumber >= 20 && randNumber < 40)
 					{
 						//duration is 3.15 seconds.
-						attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
-						walkFatigueTimer.StartTimer(walkFatigueTime);
+						//attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
+						//walkFatigueTimer.StartTimer(walkFatigueTime);
+						attacking = true;
 						StartCoroutine(CastBigSpellBelow());
 					}
 					else if (randNumber >= 40 && randNumber < 60)
@@ -280,8 +287,11 @@ public class DeathBringer : MonoBehaviour, IDamageable
 					else if (randNumber >= 20 && randNumber < 40)
 					{
 						//duration is 3.15 seconds.
-						attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
-						walkFatigueTimer.StartTimer(walkFatigueTime);
+						//attackFatigueTimer.StartTimer(RandomFatigueTime(3.65f, 4.65f));
+						//walkFatigueTimer.StartTimer(walkFatigueTime);
+
+						attacking = true;
+
 						StartCoroutine(CastBigSpellBelow());
 					}
 					else if (randNumber >= 40 && randNumber < 60)
@@ -329,8 +339,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 8.75 seconds
 	private void ExplodeAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(8.75f + attackFatigueTime, 9.75f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime * 2.5f);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(8.75f + attackFatigueTime, 9.75f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime * 2.5f);
 
 		StartCoroutine(Explode());
 	}
@@ -338,24 +350,30 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 2 seconds -> new value 3
 	private void SpellAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(CastingSpell());
 	}
 
 	//Duration: 2 seconds -> new value 3
 	private void HealingStatueAttack()
 	{
-		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(2f + attackFatigueTime, 3f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(SummoningingHealingStatue());
 	}
 
 	//Duration: 3 seconds
 	private void TeleportAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(3f + attackFatigueTime, 4f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime);
 
 		StartCoroutine(Teleport(PickRandomTeleportLocation()));
 	}
@@ -363,16 +381,20 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	//Duration: 3.05 seconds -> new length = 2.35 (0.7 faster, 0.2 in animation and 0.5 in end recovery)
 	private void MeleeAttack()
     {
-		attackFatigueTimer.StartTimer(RandomFatigueTime(2.35f + attackFatigueTime, 4.05f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(1.35f + attackFatigueTime, 3.05f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime);
 		StartCoroutine(Melee());
 	}
 
 	//Duration: 6.05 seconds
 	private IEnumerator AmbushAttack()
 	{
-		attackFatigueTimer.StartTimer(RandomFatigueTime(6.05f + attackFatigueTime, 7.05f + attackFatigueTime));
-		walkFatigueTimer.StartTimer(walkFatigueTime);
+		attacking = true;
+
+		//attackFatigueTimer.StartTimer(RandomFatigueTime(5.05f + attackFatigueTime, 6.05f + attackFatigueTime));
+		//walkFatigueTimer.StartTimer(walkFatigueTime);
 
 		//teleport location
 		Vector3 teleportLocation = new Vector3(transform.position.x, transform.position.y, 0);
@@ -417,6 +439,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return StartCoroutine(Teleport(teleportLocation));
 
 		FaceThePlayer();
+		attacking = true;
 
 		yield return StartCoroutine(Melee());
 	}
@@ -768,6 +791,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		animator.Play("Close-Range-Spell");
 		yield return new WaitForSeconds(1.75f);
 		SummonBigSpell();
+		attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		yield return new WaitForSeconds(1);
 	}
 
@@ -779,6 +805,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(1);
 		int rand = Random.Range(3,7);
 		CastSpell(rand);
+		attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		yield return new WaitForSeconds(1);
 	}
 
@@ -789,6 +818,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		animator.Play("summonHealingStatue");
 		yield return new WaitForSeconds(1.2f);
 		SummonHealingStatue();
+		attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		yield return new WaitForSeconds(1);
 	}
 
@@ -831,7 +863,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		yield return new WaitForSeconds(0.1f);
 		meleeAttackTrigger.transform.gameObject.SetActive(false);
 		yield return new WaitForSeconds(.45f);
-
+		attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		//animator.Play("Idle"); not needed?
 		yield return new WaitForSeconds(0.5f);
 	}
@@ -852,6 +886,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		audioManager.PlayDeathBringerTeleportSound();
 		yield return new WaitForSeconds(0.5f);
 		boxCollider.enabled = true;
+        attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		yield return new WaitForSeconds(0.5f);
 	}
 
@@ -958,6 +995,9 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		animator.Play("Teleport End");
 		yield return new WaitForSeconds(0.5f);
 		boxCollider.enabled = true;
+		attacking = false;
+		attackFatigueTimer.StartTimer(attackFatigueTime);
+		walkFatigueTimer.StartTimer(walkFatigueTime);
 		yield return new WaitForSeconds(0.5f);
 	}
 

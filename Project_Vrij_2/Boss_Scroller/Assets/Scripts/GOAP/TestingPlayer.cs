@@ -2,18 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Player : MonoBehaviour, IDamageable
+public class TestingPlayer : MonoBehaviour, IDamageable
 {
-    private float playerSpeed = 3.5f;
+    private float playerSpeed = 2.5f;
     private Rigidbody2D rbPlayer;
     private Animator animPlayer;
 
     private Vector3 startPos;
 
     //implement stamina sytstem
-    [SerializeField] private StaminaBar staminaBar;
-    private float recoveryDelay = 1f;
-    private float recoveryRate = 0.25f;
+    private float recoveryDelay = 2f;
+    private float recoveryRate = 0.1f;
     private float maxStamina = 100;
     private float currentStamina = 100;
     private float dodgeCost = 25f;
@@ -34,7 +33,7 @@ public class Player : MonoBehaviour, IDamageable
 
     private float dodgeVelocity = 250f;
 
-    private float dodgeImmuneTime = 0.6f;
+    private float dodgeImmuneTime = 0.4f;
 
     private WaitTimer playerActionTimer = new WaitTimer();
     private WaitTimer playerInvincibilityTimer = new WaitTimer();
@@ -46,12 +45,8 @@ public class Player : MonoBehaviour, IDamageable
     private IDamageable objectToDamage;
     private bool alreadyDamaged = false;
 
-    [SerializeField] private HealthBar healthBar;
     private float maxHealth = 100;
     private float currentHealth = 100;
-
-    private GameManager gameManager;
-    private AudioManager audioManager;
 
     // Use this for initialization
     void Awake()
@@ -60,29 +55,15 @@ public class Player : MonoBehaviour, IDamageable
         rbPlayer = this.GetComponent<Rigidbody2D>();
         animPlayer = this.GetComponent<Animator>();
 
-        gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
-        audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
-
         renderer = GetComponent<SpriteRenderer>();
 
         startPos = this.transform.position;
 
         defaultAttackTriggerOffset = Attack_Trigger.offset;
-
-        if(healthBar != null)
-        {
-            healthBar.SetUpHealthBar(maxHealth);
-        }
-        if (staminaBar != null)
-        {
-            staminaBar.SetUpStaminaBar(maxStamina);
-        }
     }
 
     void Update()
     {
-        if (!gameManager.playerIsAlive) return;
-
         if (damaging)
         {
             if (objectToDamage != null && !alreadyDamaged)
@@ -105,7 +86,6 @@ public class Player : MonoBehaviour, IDamageable
     public void SetDefaultValues()
     {
         currentHealth = maxHealth;
-        healthBar.SetUpHealthBar(maxHealth);
         animPlayer.Play("Idle");
         transform.position = startPos;
         playerCollider.enabled = true;
@@ -116,17 +96,12 @@ public class Player : MonoBehaviour, IDamageable
 
     private void RecoverStamina()
     {
-        if(currentStamina < maxStamina && staminaRecoverTimer.TimerFinished())
+        if (currentStamina < maxStamina && staminaRecoverTimer.TimerFinished())
         {
             currentStamina += recoveryRate;
             if (currentStamina > maxStamina)
             {
                 currentStamina = maxStamina;
-                staminaBar.SetStamina(maxStamina);
-            }
-            else
-            {
-                staminaBar.IncreaseStamina(recoveryRate);
             }
         }
     }
@@ -135,7 +110,7 @@ public class Player : MonoBehaviour, IDamageable
     {
         if (!playerInvincibilityTimer.TimerFinished())
         {
-            //playerCollider.enabled = false;
+            playerCollider.enabled = false;
         }
         else if (!playerCollider.enabled)
         {
@@ -146,21 +121,19 @@ public class Player : MonoBehaviour, IDamageable
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            if(currentStamina >= attackCost)
+            if (currentStamina >= attackCost)
             {
                 AttackAction();
                 currentStamina -= attackCost;
-                staminaBar.DecreaseStamina(attackCost);
                 staminaRecoverTimer.StartTimer(recoveryDelay);
             }
         }
         else if (Input.GetKeyDown(KeyCode.Space))
         {
-            if(currentStamina >= dodgeCost)
+            if (currentStamina >= dodgeCost)
             {
                 DodgeAction();
                 currentStamina -= dodgeCost;
-                staminaBar.DecreaseStamina(dodgeCost);
                 staminaRecoverTimer.StartTimer(recoveryDelay);
             }
         }
@@ -173,7 +146,6 @@ public class Player : MonoBehaviour, IDamageable
     private void AttackAction()
     {
         rbPlayer.velocity = new Vector2(0, rbPlayer.velocity.y);
-        audioManager.PlayPlayerAttackSound();
         animPlayer.Play("Dash_Attack");
         playerActionTimer.StartTimer(attackCooldown);
         StartCoroutine(DamageCollisionDuration(attackCooldown));
@@ -194,7 +166,6 @@ public class Player : MonoBehaviour, IDamageable
 
         GrandPlayerInvincibility(dodgeImmuneTime);
 
-        audioManager.PlaySlidePlayerSound();
         animPlayer.Play("Slide");
         playerActionTimer.StartTimer(dodgeCooldown);
     }
@@ -214,7 +185,6 @@ public class Player : MonoBehaviour, IDamageable
         animPlayer.SetFloat("HorizontalSpeed", Mathf.Abs(hor));
         //animPlayer.SetFloat("verticalSpeed", ver);
 
-        if (Mathf.Abs(hor) > 0) audioManager.PlayMovementPlayerSound();
 
         if (hor == 0)
         {
@@ -247,38 +217,30 @@ public class Player : MonoBehaviour, IDamageable
     {
         if (playerInvincibilityTimer.TimerFinished())
         {
-            if(currentHealth >= 0)
+            if (currentHealth >= 0)
             {
-                healthBar.DecreaseHealth(damage);
                 currentHealth -= damage;
 
-                if(currentHealth > 0)
+                if (currentHealth > 0)
                 {
                     animPlayer.Play("Hurt");
-                    audioManager.PlayPlayerImpact();
 
                     playerInvincibilityTimer.StartTimer(.80f);
 
-                    //playerCollider.enabled = false;
+                    playerCollider.enabled = false;
                 }
                 else
                 {
-                    gameManager.playerIsAlive = false;
                     rbPlayer.velocity = Vector2.zero;
-                    //playerCollider.enabled = false;
+                    playerCollider.enabled = false;
                     animPlayer.Play("Death");
-                    StartCoroutine(audioManager.PlayDefeatAudio());
-                    StartCoroutine(gameManager.GameOver());
                 }
             }
             else
             {
-                gameManager.playerIsAlive = false;
                 rbPlayer.velocity = Vector2.zero;
-                //playerCollider.enabled = false;
+                playerCollider.enabled = false;
                 animPlayer.Play("Death");
-                StartCoroutine(audioManager.PlayDefeatAudio());
-                StartCoroutine(gameManager.GameOver());
             }
         }
     }
@@ -297,9 +259,8 @@ public class Player : MonoBehaviour, IDamageable
         {
             objectToDamage = triggerCollision.gameObject.GetComponent<IDamageable>();
         }
-        if(triggerCollision.gameObject.name == "BossTrigger")
+        if (triggerCollision.gameObject.name == "BossTrigger")
         {
-            gameManager.LockBossRoom();
             triggerCollision.gameObject.SetActive(false);
         }
     }

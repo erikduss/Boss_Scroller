@@ -59,7 +59,6 @@ public class AbigailMoveAction : GOAPAction {
 			Animator currAnim = GetComponentInParent<Animator> ();
 			currAnim.Play ("abigailEvade");
 
-			currA.setSpeed (dashSpeed);
 			Vector2 point = Random.insideUnitCircle * 5;
 			Vector3 targetPoint = new Vector3 (target.transform.position.x + point.x, 
 				target.transform.position.y + point.y,

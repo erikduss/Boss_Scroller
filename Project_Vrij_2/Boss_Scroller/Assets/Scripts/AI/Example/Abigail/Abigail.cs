@@ -15,9 +15,7 @@ public class Abigail : Enemy, IDamageable {
 
 		minDist = 10f;
 
-		setSpeed (speed);
-
-		player = GameObject.FindGameObjectWithTag("Player");
+		target = GameObject.FindGameObjectWithTag("Player");
 	}
 
 	public override void passiveRegen(){

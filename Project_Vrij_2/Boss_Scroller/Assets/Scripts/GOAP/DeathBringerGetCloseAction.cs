@@ -12,6 +12,10 @@ public class DeathBringerGetCloseAction : GOAPAction
 	protected float initialSpeed;
 	protected float acceleration;
 
+	private Animator animator;
+	private Rigidbody2D rbAI;
+	private SpriteRenderer renderer;
+
 	//This action has the effect of being near the player
 	//no pre condition at the moment.
 	public DeathBringerGetCloseAction()
@@ -21,7 +25,15 @@ public class DeathBringerGetCloseAction : GOAPAction
 		cost = 5f;
 	}
 
-	public override void reset()
+    public void Start()
+    {
+		target = GameObject.FindGameObjectWithTag("Player");
+		animator = gameObject.GetComponent<Animator>();
+		rbAI = gameObject.GetComponent<Rigidbody2D>();
+		renderer = gameObject.GetComponent<SpriteRenderer>();
+	}
+
+    public override void reset()
 	{
 		isClose = false;
 		target = null;
@@ -61,27 +73,28 @@ public class DeathBringerGetCloseAction : GOAPAction
 
 	public override bool perform(GameObject agent)
 	{
-		target = GameObject.FindGameObjectWithTag("Player");
+		return MoveAgent();
+	}
 
-		float dist = Vector3.Distance(transform.position, target.transform.position);
+	private float playerDistance()
+	{
+		var vec = transform.position - target.transform.position;
+		vec.y = 0;
+		float dist = vec.magnitude;
 
-		DeathBringerGOAP currA = agent.GetComponent<DeathBringerGOAP>();
-		currA.stamina -= (cost);
+		return dist;
+	}
 
-		Animator currAnim = GetComponentInParent<Animator>();
-
-		if (dist <= minDist)
+	private bool MoveAgent()
+	{
+		if (playerDistance() <= minDist)
 		{
-			currAnim.SetBool("Walking", false);
-			isClose = true;
-			return isClose;
+			rbAI.velocity = Vector2.zero;
+			animator.SetBool("Walking", false);
+			return true;
 		}
 		else
 		{
-			currAnim.SetBool("Walking", true);
-
-			Vector3 moveDirection = target.transform.position - transform.position;
-
 			setSpeed(speed);
 
 			if (initialSpeed < terminalSpeed)
@@ -89,11 +102,30 @@ public class DeathBringerGetCloseAction : GOAPAction
 				initialSpeed += acceleration;
 			}
 
-			Vector3 newPosition = moveDirection * initialSpeed * Time.deltaTime;
+			Vector3 moveDirection = target.transform.position - transform.position;
+
+			Vector3 newPosition = moveDirection * 0.1f;
 
 			newPosition.y = transform.position.y; //dont move the y
 
-			transform.position += newPosition;
+			rbAI.velocity = new Vector2(newPosition.x, rbAI.velocity.y);
+			animator.SetBool("Walking", true);
+
+			//This enemy is different than the player, the original sprites face different ways.
+			if (rbAI.velocity.x < 0)
+			{
+				if (renderer.flipX) //Character facing right after code
+				{
+					renderer.flipX = false;
+				}
+			}
+			else
+			{
+				if (!renderer.flipX) //Character facing left after code
+				{
+					renderer.flipX = true;
+				}
+			}
 
 			return false;
 		}
