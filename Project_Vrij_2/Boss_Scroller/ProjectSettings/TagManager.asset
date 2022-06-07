@@ -6,6 +6,7 @@ TagManager:
   tags:
   - DamageAble
   - AudioController
+  - DeathBringerHealthbar
   layers:
   - Default
   - TransparentFX

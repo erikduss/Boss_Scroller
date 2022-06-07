@@ -9,9 +9,11 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip mainMenuMusic;
     [SerializeField] private AudioClip tutorialMusic;
     [SerializeField] private AudioClip bossMusic;
+    [SerializeField] private AudioClip necromancerBossMusic;
 
     [SerializeField] private AudioSource playerAudioSource;
     [SerializeField] private AudioSource deathBringerAudioSource;
+    [SerializeField] private AudioSource necromancerAudioSource;
     [SerializeField] private AudioSource spellsAudioSource;
     [SerializeField] private AudioSource extraSpellsAudioSource;
     [SerializeField] private AudioSource playerImpactAudioSource;
@@ -33,6 +35,13 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioClip deathBringerExplotionSound;
 
     [SerializeField] private AudioClip deathBringerDeathSound;
+
+    [SerializeField] private List<AudioClip> necromancerJumpSounds = new List<AudioClip>();
+    [SerializeField] private List<AudioClip> necromancerEffortSounds = new List<AudioClip>();
+
+    [SerializeField] private AudioClip necromancerDeathSound;
+    [SerializeField] private AudioClip necromancerUltimateSound;
+    [SerializeField] private AudioClip necromancerIntroSound;
 
     [SerializeField] private AudioClip healingFireSound;
     [SerializeField] private AudioClip healingFireReceiveSound;
@@ -75,6 +84,7 @@ public class AudioManager : MonoBehaviour
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
         statueSpells.volume = maxSFXVolume;
+        necromancerAudioSource.volume = maxSFXVolume;
 
         musicAudioSource.clip = mainMenuMusic;
         musicAudioSource.loop = true;
@@ -145,6 +155,7 @@ public class AudioManager : MonoBehaviour
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
         statueSpells.volume = maxSFXVolume;
+        necromancerAudioSource.volume = maxSFXVolume;
 
         musicAudioSource.volume = maxMusicVolume;
     }
@@ -161,6 +172,7 @@ public class AudioManager : MonoBehaviour
         playerImpactAudioSource.volume = maxSFXVolume;
         enemyImpactAudioSource.volume = maxSFXVolume;
         statueSpells.volume = maxSFXVolume;
+        necromancerAudioSource.volume = maxSFXVolume;
 
         musicAudioSource.volume = maxMusicVolume;
     }
@@ -274,6 +286,34 @@ public class AudioManager : MonoBehaviour
         spellsAudioSource.volume = maxSFXVolume;
     }
 
+    //implement necromancer audio
+    public void PlayNecromancerJumpSound()
+    {
+        int rand = Random.Range(0, necromancerJumpSounds.Count);
+        necromancerAudioSource.PlayOneShot(necromancerJumpSounds[rand]);
+    }
+
+    public void PlayNecromancerAttackSound()
+    {
+        int rand = Random.Range(0, necromancerEffortSounds.Count);
+        necromancerAudioSource.PlayOneShot(necromancerEffortSounds[rand]);
+    }
+
+    public void PlayNecromancerBigSummonSound()
+    {
+        necromancerAudioSource.PlayOneShot(necromancerUltimateSound);
+    }
+
+    public void PlayNecromancerDeathSound()
+    {
+        necromancerAudioSource.PlayOneShot(necromancerUltimateSound);
+    }
+
+    public void PlayNecromancerIntroSound()
+    {
+        necromancerAudioSource.PlayOneShot(necromancerIntroSound);
+    }
+
     public void PlayPlayerAttackSound()
     {
         playerAudioSource.PlayOneShot(playerAttackSound);
@@ -289,6 +329,13 @@ public class AudioManager : MonoBehaviour
     public void SetBossMusic()
     {
         musicAudioSource.clip = bossMusic;
+        musicAudioSource.loop = true;
+        musicAudioSource.Play();
+    }
+
+    public void SetNecromancerBossMusic()
+    {
+        musicAudioSource.clip = necromancerBossMusic;
         musicAudioSource.loop = true;
         musicAudioSource.Play();
     }
@@ -354,6 +401,9 @@ public class AudioManager : MonoBehaviour
                 break;
             case MusicType.BOSS:
                     SetBossMusic();
+                break;
+            case MusicType.BOSS_NECROMANCER:
+                SetNecromancerBossMusic();
                 break;
         }
 

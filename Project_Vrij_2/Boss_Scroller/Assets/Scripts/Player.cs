@@ -102,11 +102,18 @@ public class Player : MonoBehaviour, IDamageable
         //CheckInputs();
     }
 
+    public void RestoreHealth()
+    {
+        currentHealth = maxHealth;
+        healthBar.SetUpHealthBar(maxHealth);
+    }
+
     public void SetDefaultValues()
     {
         currentHealth = maxHealth;
         healthBar.SetUpHealthBar(maxHealth);
         animPlayer.Play("Idle");
+        animPlayer.SetFloat("HorizontalSpeed", 0);
         transform.position = startPos;
         playerCollider.enabled = true;
         rbPlayer.velocity = Vector2.zero;
@@ -267,7 +274,6 @@ public class Player : MonoBehaviour, IDamageable
                     rbPlayer.velocity = Vector2.zero;
                     //playerCollider.enabled = false;
                     animPlayer.Play("Death");
-                    StartCoroutine(audioManager.PlayDefeatAudio());
                     StartCoroutine(gameManager.GameOver());
                 }
             }
@@ -277,7 +283,6 @@ public class Player : MonoBehaviour, IDamageable
                 rbPlayer.velocity = Vector2.zero;
                 //playerCollider.enabled = false;
                 animPlayer.Play("Death");
-                StartCoroutine(audioManager.PlayDefeatAudio());
                 StartCoroutine(gameManager.GameOver());
             }
         }
@@ -299,7 +304,7 @@ public class Player : MonoBehaviour, IDamageable
         }
         if(triggerCollision.gameObject.name == "BossTrigger")
         {
-            gameManager.LockBossRoom();
+            gameManager.LockDeathbringerBossRoom();
             triggerCollision.gameObject.SetActive(false);
         }
     }

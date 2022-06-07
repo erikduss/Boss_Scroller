@@ -18,6 +18,12 @@ public class HealthBar : MonoBehaviour
         healthBar.value = maxHealth;
     }
 
+    public void SetUpHealthBarWithDecreasedHealth(float maxHealth, float currentHealth)
+    {
+        healthBar.maxValue = maxHealth;
+        healthBar.value = currentHealth;
+    }
+
     public void DecreaseHealth(float health)
     {
         healthBar.value -= health;

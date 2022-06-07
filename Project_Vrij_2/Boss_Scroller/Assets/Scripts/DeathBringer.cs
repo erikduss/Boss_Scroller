@@ -4,8 +4,8 @@ using UnityEngine;
 
 public class DeathBringer : MonoBehaviour, IDamageable
 {
-	private float maxHealth = 1000;
-	private float currentHealth = 1000;
+	[HideInInspector] public float maxHealth = 1000; //default 1000
+	[HideInInspector] public float currentHealth = 1000;
 	
 	private float strength = 15;
 	private float currentStrength = 15;
@@ -54,7 +54,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private AudioManager audioManager;
 	private GameManager gameManager;
 
-	[SerializeField] private HealthBar healthBar;
+	private HealthBar healthBar;
 
 	[SerializeField] private ParticleSystem healingFire;
 	private List<GameObject> spawnedHealingStatues = new List<GameObject>();
@@ -62,6 +62,12 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	public bool isDead = false;
 
 	private bool attacking = false;
+
+	public bool isSummoned = false;
+	public Vector3 summonLocation;
+
+	private float minAreaX = -10f;
+	private float maxAreaX = 10f;
 
 	// Use this for initialization
 	void Start()
@@ -74,12 +80,24 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		audioManager = GameObject.FindGameObjectWithTag("AudioController").GetComponent<AudioManager>();
 		gameManager = GameObject.FindGameObjectWithTag("GameController").GetComponent<GameManager>();
 
+		healthBar = GameObject.FindGameObjectWithTag("DeathBringerHealthbar").GetComponentInChildren<HealthBar>();
+
 		setSpeed(speed);
 
 		startPos = transform.position;
 
 		player = GameObject.FindGameObjectWithTag("Player");
 
+		if(PlayerPrefs.GetInt("ExperimentalEnabled") == 1)
+        {
+			currentHealth = 100;
+			maxHealth = 100;
+		}
+        else
+        {
+			currentHealth = maxHealth;
+		}
+		
 		if (healthBar != null)
 		{
 			healthBar.SetUpHealthBar(maxHealth);
@@ -143,12 +161,96 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		spawnedHealingStatues.Clear();
 	}
 
+	public void SetHealthCorrectly()
+    {
+		if (PlayerPrefs.GetInt("ExperimentalEnabled") == 1)
+		{
+			currentHealth = 100;
+			maxHealth = 100;
+		}
+		else
+		{
+			maxHealth = 1000;
+			currentHealth = maxHealth;
+		}
+	}
+
 	public IEnumerator ActivateBoss()
     {
 		//renderer.enabled = false;
+		SetHealthCorrectly();
 		StartCoroutine(Teleport(startPosition));
-		yield return new WaitForSeconds(3f);
+		yield return new WaitForSeconds(1f);
+		if (healthBar == null)
+        {
+			healthBar = GameObject.FindGameObjectWithTag("DeathBringerHealthbar").GetComponentInChildren<HealthBar>();
+			healthBar.SetUpHealthBar(maxHealth);
+		}
+		yield return new WaitForSeconds(2f);
 		combatEnabled = true;
+	}
+
+	public IEnumerator ActivateSummonedBoss()
+	{
+		//renderer.enabled = false;
+		StartCoroutine(Teleport(summonLocation));
+		yield return new WaitForSeconds(1f);
+		if (healthBar == null)
+		{
+			healthBar = GameObject.FindGameObjectWithTag("DeathBringerHealthbar").GetComponentInChildren<HealthBar>();
+			healthBar.SetUpHealthBarWithDecreasedHealth(maxHealth, currentHealth);
+		}
+		yield return new WaitForSeconds(1f);
+		combatEnabled = true;
+	}
+
+	public void SetSummonedData(Vector3 summonLoc, float hlt)
+    {
+		isSummoned = true;
+		summonLocation = summonLoc;
+		summonLocation.y = -1.8f;
+		currentHealth = hlt;
+
+		maxHealth = 1000;
+		currentStrength = strength;
+		boxCollider.enabled = true;
+		animator.Play("Idle");
+		transform.position = summonLocation;
+		combatEnabled = false;
+		rbAI.velocity = Vector2.zero;
+		renderer.flipX = false;
+		renderer.enabled = true;
+		isDead = false;
+		currentAmountOfHealingStatues = 0;
+		spawnedHealingStatues.Clear();
+
+		minAreaX = -35f;
+		maxAreaX = 95f;
+
+		if (healthBar == null)
+		{
+			healthBar = GameObject.FindGameObjectWithTag("DeathBringerHealthbar").GetComponentInChildren<HealthBar>();
+			healthBar.SetUpHealthBarWithDecreasedHealth(maxHealth, currentHealth);
+		}
+        else
+        {
+			healthBar.SetUpHealthBarWithDecreasedHealth(maxHealth, currentHealth);
+		}
+
+		if (currentHealth > 0)
+		{
+			if (currentHealth >= maxHealth)
+			{
+				currentHealth = maxHealth;
+				healthBar.SetHealth(maxHealth);
+			}
+			else
+			{
+				healthBar.SetHealth(currentHealth);
+			}
+		}
+
+		StartCoroutine(ActivateSummonedBoss());
 	}
 
 	private void ChooseNewAttack()
@@ -496,8 +598,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	private void CastSpell(int amountOfSpells)
     {
-		float minX = -10;
-		float maxX = 10;
+		float minX = minAreaX;
+		float maxX = maxAreaX;
 
 		float minimumCastRange = 3f;
 
@@ -585,8 +687,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	private void SummonHealingStatue()
     {
-		float minX = -10;
-		float maxX = 10;
+		float minX = minAreaX;
+		float maxX = maxAreaX;
 
 		float minimumCastRange = 3f;
 
@@ -634,8 +736,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	private Vector3 PickRandomTeleportLocation()
     {
-		float minX = -10;
-		float maxX = 10;
+		float minX = minAreaX;
+		float maxX = maxAreaX;
 
 		float minimumTeleportLength = 3f;
 
@@ -720,7 +822,11 @@ public class DeathBringer : MonoBehaviour, IDamageable
     {
 		yield return new WaitForSeconds(1);
 		renderer.enabled = false;
-		StartCoroutine(gameManager.DeathBringerDefeated());
+		explosion_Indicator.SetActive(false);
+		if (!isSummoned)
+        {
+			StartCoroutine(gameManager.DeathBringerDefeated());
+		}
 		yield return new WaitForSeconds(2);
 	}
 

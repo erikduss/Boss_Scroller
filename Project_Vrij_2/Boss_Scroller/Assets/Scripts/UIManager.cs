@@ -7,7 +7,8 @@ using UnityEngine.UI;
 public class UIManager : MonoBehaviour
 {
     [SerializeField] private GameObject PlayerUI;
-    [SerializeField] private GameObject BossUI;
+    [SerializeField] private GameObject DeathBringerUI;
+    [SerializeField] private GameObject NecromancerUI;
 
     [SerializeField] private List<Button> mainMenuButtons;
     [SerializeField] private List<Image> mainMenuUIImages;
@@ -27,6 +28,8 @@ public class UIManager : MonoBehaviour
     [SerializeField] private TextMeshProUGUI musicVolumePercentage;
     [SerializeField] private TextMeshProUGUI generalVolumePercentage;
 
+    [SerializeField] private Toggle ExperimentalToggle;
+
     [SerializeField] private GameObject deathPanel;
     private Image deathPanelImage;
     [SerializeField] private TextMeshProUGUI deathPanelText;
@@ -43,7 +46,8 @@ public class UIManager : MonoBehaviour
     void Start()
     {
         PlayerUI.SetActive(false);
-        BossUI.SetActive(false);
+        SetDeathBringerUI(false);
+        NecromancerUI.SetActive(false);
         deathPanelImage = deathPanel.GetComponent<Image>();
         endDemoImage = endDemoPanel.GetComponent<Image>();
 
@@ -91,8 +95,24 @@ public class UIManager : MonoBehaviour
             PlayerPrefs.Save();
         }
 
+        if (!PlayerPrefs.HasKey("ExperimentalEnabled"))
+        {
+            PlayerPrefs.SetInt("ExperimentalEnabled", 0);
+            PlayerPrefs.Save();
+        }
+
         musicVolumeSlider.value = PlayerPrefs.GetFloat("MusicVolume");
         generalVolumeSlider.value = PlayerPrefs.GetFloat("GeneralVolume");
+
+        int experimentalValue = PlayerPrefs.GetInt("ExperimentalEnabled");
+        if (experimentalValue == 0)
+        {
+            ExperimentalToggle.isOn = false;
+        }
+        else
+        {
+            ExperimentalToggle.isOn = true;
+        }
 
         lastKnownMusicVolume = musicVolumeSlider.value;
         lastKnownGeneralVolume = generalVolumeSlider.value;
@@ -105,6 +125,15 @@ public class UIManager : MonoBehaviour
     {
         float valueMusic = musicVolumeSlider.value;
         float valueGeneral = generalVolumeSlider.value;
+
+        if (ExperimentalToggle.isOn)
+        {
+            PlayerPrefs.SetInt("ExperimentalEnabled", 1);
+        }
+        else
+        {
+            PlayerPrefs.SetInt("ExperimentalEnabled", 0);
+        }
 
         PlayerPrefs.SetFloat("GeneralVolume", valueGeneral);
         PlayerPrefs.SetFloat("MusicVolume", valueMusic);
@@ -132,7 +161,8 @@ public class UIManager : MonoBehaviour
         SetDeathPanelAlpha(0,1f);
         SetEndDemoPanelAlpha(0,1f);
         SetPlayerUI(true);
-        SetBossUI(false);
+        SetDeathBringerUI(false);
+        SetNecromancerUI(false);
         SetMenuUI(true);
         SetUIButtonStates(true);
         yield return new WaitForSeconds(1);
@@ -221,10 +251,18 @@ public class UIManager : MonoBehaviour
         PlayerUI.SetActive(state);
     }
 
-    public void SetBossUI(bool state)
+    public void SetDeathBringerUI(bool state)
     {
-        BossUI.SetActive(state);
+        for(int i=0; i< DeathBringerUI.transform.childCount; i++)
+        {
+            DeathBringerUI.transform.GetChild(i).gameObject.SetActive(state);
+        }
     }
+    public void SetNecromancerUI(bool state)
+    {
+        NecromancerUI.SetActive(state);
+    }
+
     public void SetMenuUI(bool state)
     {
         PlayerUI.SetActive(state);

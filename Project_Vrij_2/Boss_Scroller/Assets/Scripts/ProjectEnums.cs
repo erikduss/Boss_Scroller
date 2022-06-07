@@ -14,5 +14,6 @@ public enum MusicType
 {
     MENU,
     TUTORIAL,
-    BOSS
+    BOSS,
+    BOSS_NECROMANCER
 }
