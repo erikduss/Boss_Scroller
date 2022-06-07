@@ -14,7 +14,7 @@ public class AudioManager : MonoBehaviour
     [SerializeField] private AudioSource playerAudioSource;
     [SerializeField] private AudioSource deathBringerAudioSource;
     [SerializeField] private AudioSource necromancerAudioSource;
-    [SerializeField] private AudioSource spellsAudioSource;
+    [SerializeField] public AudioSource spellsAudioSource;
     [SerializeField] private AudioSource extraSpellsAudioSource;
     [SerializeField] private AudioSource playerImpactAudioSource;
     [SerializeField] private AudioSource enemyImpactAudioSource;

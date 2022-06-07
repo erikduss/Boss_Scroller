@@ -44,6 +44,8 @@ public class DeathBringer : MonoBehaviour, IDamageable
 	private float walkFatigueTime = 2f;
 	private WaitTimer walkFatigueTimer = new WaitTimer();
 
+	private WaitTimer selfCorrectionTimer = new WaitTimer();
+
 	[SerializeField] private GameObject explosion_Indicator;
 
 	[SerializeField] private BoxCollider2D meleeAttackTrigger;
@@ -95,6 +97,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 		}
         else
         {
+			maxHealth = 1000;
 			currentHealth = maxHealth;
 		}
 		
@@ -110,6 +113,20 @@ public class DeathBringer : MonoBehaviour, IDamageable
     {
 		if (!combatEnabled || currentHealth <= 0 || !gameManager.playerIsAlive || isDead || attacking)
 		{
+            if (isDead)
+            {
+                //check if something went wrong
+                if (selfCorrectionTimer.TimerFinished())
+                {
+					if (!gameManager.activatedNecromancer)
+					{
+						audioManager.spellsAudioSource.Stop();
+						StartCoroutine(gameManager.DeathBringerDefeated());
+						selfCorrectionTimer.StartTimer(8.5f);
+					}
+				}
+            }
+
 			rbAI.velocity = Vector2.zero;
 			return;
 		}
@@ -173,6 +190,12 @@ public class DeathBringer : MonoBehaviour, IDamageable
 			maxHealth = 1000;
 			currentHealth = maxHealth;
 		}
+
+		if (healthBar == null)
+		{
+			healthBar = GameObject.FindGameObjectWithTag("DeathBringerHealthbar").GetComponentInChildren<HealthBar>();
+		}
+		healthBar.SetUpHealthBar(maxHealth);
 	}
 
 	public IEnumerator ActivateBoss()
@@ -801,6 +824,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				StopAllCoroutines();
 				audioManager.PlayDeathBringerDeathSound();
 				animator.Play("Death");
+				selfCorrectionTimer.StartTimer(8.5f);
 				StartCoroutine(deathBringerDied());
 			}
 		}
@@ -813,6 +837,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				StopAllCoroutines();
 				audioManager.PlayDeathBringerDeathSound();
 				animator.Play("Death");
+				selfCorrectionTimer.StartTimer(8.5f);
 				StartCoroutine(deathBringerDied());
 			}
 		}

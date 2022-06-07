@@ -12,8 +12,8 @@ public class Player : MonoBehaviour, IDamageable
 
     //implement stamina sytstem
     [SerializeField] private StaminaBar staminaBar;
-    private float recoveryDelay = 1f;
-    private float recoveryRate = 0.25f;
+    private float recoveryDelay = .75f;
+    private float recoveryRate = 0.5f;
     private float maxStamina = 100;
     private float currentStamina = 100;
     private float dodgeCost = 25f;

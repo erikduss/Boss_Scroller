@@ -21,6 +21,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] private BoxCollider2D bossFightTrigger;
     public bool gameStarted = false;
 
+    public bool activatedNecromancer = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -71,9 +73,9 @@ public class GameManager : MonoBehaviour
     {
         bossRoomBorders.SetActive(true);
         StartCoroutine(audioManager.FadeAndChangeMusic(2f, MusicType.BOSS));
+        uiManager.SetDeathBringerUI(true);
         StartCoroutine(deathBringerEnemy.ActivateBoss());
         cam.SetStaticCamera(new Vector3(0,0,0));
-        uiManager.SetDeathBringerUI(true);
     }
 
     public void LockNecromancerBossRoom()
@@ -82,6 +84,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(audioManager.FadeAndChangeMusic(2f, MusicType.BOSS_NECROMANCER));
         StartCoroutine(necromancerEnemy.ActivateBoss());
         uiManager.SetNecromancerUI(true);
+        activatedNecromancer = true;
     }
 
     private void EnableCursor()
@@ -143,6 +146,7 @@ public class GameManager : MonoBehaviour
         deathBringerEnemy.ResetToDefaults();
         necromancerEnemy.ResetToDefaults();
         StartCoroutine(uiManager.ResetAllUI());
+        activatedNecromancer = false;
     }
 
     public IEnumerator GameOver()
