@@ -17,3 +17,11 @@ public enum MusicType
     BOSS,
     BOSS_NECROMANCER
 }
+
+public enum GameState
+{
+    IN_MENU,
+    TUTORIAL,
+    DEATHBRINGER,
+    NECROMANCER
+}

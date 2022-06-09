@@ -9,6 +9,7 @@ public class SmoothCamera : MonoBehaviour
     public Transform target;
 
     public float maxXValue = 0;
+    public float minXValue = -30f;
 
     private GameObject staticCameraTarget;
 
@@ -29,7 +30,7 @@ public class SmoothCamera : MonoBehaviour
             Vector3 destination = transform.position + delta;
 
             if (destination.y < 1) destination.y = 1;
-            if (destination.x < -30f) destination.x = -30f;
+            if (destination.x < minXValue) destination.x = minXValue;
             if (destination.x > maxXValue) destination.x = maxXValue;
 
             transform.position = Vector3.SmoothDamp(transform.position, destination, ref velocity, dampTime);

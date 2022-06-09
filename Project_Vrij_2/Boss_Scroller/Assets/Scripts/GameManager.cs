@@ -17,11 +17,14 @@ public class GameManager : MonoBehaviour
     public bool playerIsAlive = true;
 
     private Player player;
+    private WaitTimer correctionTimer = new WaitTimer();
 
     [SerializeField] private BoxCollider2D bossFightTrigger;
     public bool gameStarted = false;
 
     public bool activatedNecromancer = false;
+
+    private GameState currentGameState;
 
     // Start is called before the first frame update
     void Start()
@@ -34,16 +37,54 @@ public class GameManager : MonoBehaviour
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+
+        currentGameState = GameState.IN_MENU;
+        correctionTimer.StartTimer(5f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (correctionTimer.TimerFinished())
+        {
+            switch (currentGameState)
+            {
+                case GameState.IN_MENU:
+                        if (!Cursor.visible || Cursor.lockState == CursorLockMode.Locked || gameStarted || playerObject.GetComponent<Player>().enabled || cam.target != playerObject.transform || cam.maxXValue != 0f || cam.minXValue != -30f || !playerIsAlive || !bossFightTrigger.enabled || bossRoomBorders.activeInHierarchy || activatedNecromancer)
+                        {
+                            StartCoroutine(RestoreIncorrectionsInMenu());
+                            correctionTimer.StartTimer(15f);
+                        }
+                    break;
+                case GameState.TUTORIAL:
+                        if (Cursor.visible || Cursor.lockState != CursorLockMode.Locked || !gameStarted || !playerObject.GetComponent<Player>().enabled)
+                        {
+                            StartGame();
+                            correctionTimer.StartTimer(7.5f);
+                        }
+                    break;
+                case GameState.DEATHBRINGER:
+                        if (!bossRoomBorders.activeInHierarchy || !deathBringerEnemy.combatEnabled)
+                        {
+                            LockDeathbringerBossRoom();
+                            correctionTimer.StartTimer(6f);
+                        }
+                    break;
+                case GameState.NECROMANCER:
+                        if (cam.maxXValue != 90f || cam.minXValue != 0f || cam.target != playerObject.transform || !bossRoomBorders.activeInHierarchy || !activatedNecromancer)
+                        {
+                            StartCoroutine(DeathBringerDefeated());
+                            correctionTimer.StartTimer(10f);
+                        }
+                    break;
+            }
+        }
     }
 
     public void StartGame()
     {
+        currentGameState = GameState.TUTORIAL;
+        correctionTimer.StartTimer(7.5f);
         uiManager.SetUIButtonStates(false);
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
@@ -71,6 +112,8 @@ public class GameManager : MonoBehaviour
 
     public void LockDeathbringerBossRoom()
     {
+        currentGameState = GameState.DEATHBRINGER;
+        correctionTimer.StartTimer(6f);
         bossRoomBorders.SetActive(true);
         StartCoroutine(audioManager.FadeAndChangeMusic(2f, MusicType.BOSS));
         uiManager.SetDeathBringerUI(true);
@@ -95,10 +138,13 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator DeathBringerDefeated()
     {
+        currentGameState = GameState.NECROMANCER;
+        correctionTimer.StartTimer(10f);
         uiManager.SetDeathBringerUI(false);
         audioManager.StopAllSoundEffects();
         cam.target = playerObject.transform;
         cam.maxXValue = 90f;
+        cam.minXValue = 0f;
         rightBossRoomBorder.transform.position = new Vector3(100, rightBossRoomBorder.transform.position.y, rightBossRoomBorder.transform.position.z);
         yield return new WaitForSeconds(5f);
         player.RestoreHealth();
@@ -114,6 +160,8 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator NecromancerDefeated()
     {
+        currentGameState = GameState.IN_MENU;
+        correctionTimer.StartTimer(15f);
         uiManager.SetNecromancerUI(false);
         audioManager.StopAllSoundEffects();
         cam.target = playerObject.transform;
@@ -124,6 +172,8 @@ public class GameManager : MonoBehaviour
     //combine this function with the game over?
     public IEnumerator EndTheGame()
     {
+        currentGameState = GameState.IN_MENU;
+        correctionTimer.StartTimer(15f);
         yield return new WaitForSeconds(5f);
         uiManager.SetEndDemoPanelAlpha(1, 2f);
         yield return new WaitForSeconds(2f);
@@ -136,6 +186,7 @@ public class GameManager : MonoBehaviour
         playerIsAlive = true;
         bossFightTrigger.gameObject.SetActive(true);
         cam.maxXValue = 0f;
+        cam.minXValue = -30f;
         EnableCursor();
     }
 
@@ -147,10 +198,30 @@ public class GameManager : MonoBehaviour
         necromancerEnemy.ResetToDefaults();
         StartCoroutine(uiManager.ResetAllUI());
         activatedNecromancer = false;
+        gameStarted = false;
+    }
+
+    private IEnumerator RestoreIncorrectionsInMenu()
+    {
+        currentGameState = GameState.IN_MENU;
+        correctionTimer.StartTimer(5f);
+        yield return new WaitForSeconds(1f);
+        cam.target = playerObject.transform;
+        yield return new WaitForSeconds(1f);
+        ResetToDefaults();
+        yield return new WaitForSeconds(1f);
+        player.enabled = false;
+        playerIsAlive = true;
+        bossFightTrigger.gameObject.SetActive(true);
+        cam.maxXValue = 0f;
+        cam.minXValue = -30f;
+        EnableCursor();
     }
 
     public IEnumerator GameOver()
     {
+        currentGameState = GameState.IN_MENU;
+        correctionTimer.StartTimer(15f);
         StartCoroutine(audioManager.PlayDefeatAudio());
         uiManager.SetDeathPanelAlpha(1,2f);
         yield return new WaitForSeconds(2f);
@@ -163,6 +234,7 @@ public class GameManager : MonoBehaviour
         playerIsAlive = true;
         bossFightTrigger.gameObject.SetActive(true);
         cam.maxXValue = 0f;
+        cam.minXValue = -30f;
         EnableCursor();
     }
 }

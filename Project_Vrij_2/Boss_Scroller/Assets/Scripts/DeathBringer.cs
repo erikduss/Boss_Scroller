@@ -6,7 +6,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 {
 	[HideInInspector] public float maxHealth = 1000; //default 1000
 	[HideInInspector] public float currentHealth = 1000;
-	
+
 	private float strength = 15;
 	private float currentStrength = 15;
 
@@ -50,7 +50,7 @@ public class DeathBringer : MonoBehaviour, IDamageable
 
 	[SerializeField] private BoxCollider2D meleeAttackTrigger;
 
-	private bool combatEnabled = false;
+	[HideInInspector] public bool combatEnabled = false;
 	private Vector3 startPosition = new Vector3(4.27f,-1.8f,0);
 
 	private AudioManager audioManager;
@@ -822,7 +822,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				isDead = true;
 				boxCollider.enabled = false;
 				StopAllCoroutines();
-				audioManager.PlayDeathBringerDeathSound();
+                if (damage != 1000)
+                {
+					audioManager.PlayDeathBringerDeathSound();
+				}
 				animator.Play("Death");
 				selfCorrectionTimer.StartTimer(8.5f);
 				StartCoroutine(deathBringerDied());
@@ -835,7 +838,10 @@ public class DeathBringer : MonoBehaviour, IDamageable
 				isDead = true;
 				boxCollider.enabled = false;
 				StopAllCoroutines();
-				audioManager.PlayDeathBringerDeathSound();
+				if (damage != 1000)
+				{
+					audioManager.PlayDeathBringerDeathSound();
+				}
 				animator.Play("Death");
 				selfCorrectionTimer.StartTimer(8.5f);
 				StartCoroutine(deathBringerDied());

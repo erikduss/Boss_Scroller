@@ -73,6 +73,8 @@ public class Necromancer : MonoBehaviour, IDamageable
 
 	[SerializeField] private ParticleSystem enrageFire;
 
+	private bool damaging = false;
+
 	// Use this for initialization
 	void Start()
 	{
@@ -129,6 +131,20 @@ public class Necromancer : MonoBehaviour, IDamageable
 
 	public void ResetToDefaults()
 	{
+		if (spawnedDeathBringer)
+		{
+			deathBringer.isSummoned = true;
+			deathBringer.TakeDamage(1000);
+			spawnedDeathBringer = false;
+		}
+		if (amountOfSkeletonsAlive > 0)
+		{
+			foreach (SummonedSkeleton skelly in summonedSkeletons)
+			{
+				skelly.ConsumeDeath();
+			}
+			amountOfSkeletonsAlive = 0;
+		}
 		currentHealth = maxHealth;
 		currentStrength = strength;
 		boxCollider.enabled = true;
@@ -140,6 +156,9 @@ public class Necromancer : MonoBehaviour, IDamageable
 		renderer.flipX = true;
 		renderer.enabled = true;
 		isDead = false;
+		enrage = 0;
+		EnrageUpdate();
+		
 	}
 
 	public IEnumerator ActivateBoss()
@@ -148,6 +167,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 		audioManager.PlayNecromancerIntroSound();
 		yield return new WaitForSeconds(3f);
 		combatEnabled = true;
+		enrageIncreaseTimer.StartTimer(15f);
 	}
 
 	private void ChooseNewAttack()
@@ -404,7 +424,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 		Vector3 jumpLocation;
 		float distanceToAttackFrom = Random.Range(5f, 25f);
 
-		if(player.transform.position.x < -35f) //cant go left
+		if(player.transform.position.x < -10f) //cant go left
         {
 			float newX = player.transform.position.x + distanceToAttackFrom;
 			if (newX > 95f) newX = 95f;
@@ -414,7 +434,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 		else if (player.transform.position.x > 95f) //cant go right
         {
 			float newX = player.transform.position.x - distanceToAttackFrom;
-			if (newX < -35f) newX = -35f;
+			if (newX < -10f) newX = -10f;
 
 			jumpLocation = new Vector3(newX, transform.position.y, transform.position.z);
 		}
@@ -432,7 +452,7 @@ public class Necromancer : MonoBehaviour, IDamageable
             else
             {
 				float newX = player.transform.position.x - distanceToAttackFrom;
-				if (newX < -35f) newX = -35f;
+				if (newX < -10f) newX = -10f;
 
 				jumpLocation = new Vector3(newX, transform.position.y, transform.position.z);
 			}
@@ -501,9 +521,11 @@ public class Necromancer : MonoBehaviour, IDamageable
 
 		int amountOfProjectilesCast = 0;
 
-        while (playerDistance() > minDist && !cancelAttack)
+        while (playerDistance() > minDist && !cancelAttack && combatEnabled)
         {
-            animator.Play("Necromancer_Spellcast");
+			if(rbAI.velocity != Vector2.zero) rbAI.velocity = Vector2.zero;
+
+			animator.Play("Necromancer_Spellcast");
 			audioManager.PlayNecromancerAttackSound();
             yield return new WaitForSeconds(0.4f);
 
@@ -541,7 +563,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 		Vector3 jumpLocation;
 		float distanceToJump = Random.Range(5f, 10f);
 
-		if (player.transform.position.x < -35f) //cant go left
+		if (player.transform.position.x < -10f) //cant go left
 		{
 			float newX = player.transform.position.x + distanceToJump;
 			if (newX > 95f) newX = 95f;
@@ -551,7 +573,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 		else if (player.transform.position.x > 95f) //cant go right
 		{
 			float newX = player.transform.position.x - distanceToJump;
-			if (newX < -35f) newX = -35f;
+			if (newX < -10f) newX = -10f;
 
 			jumpLocation = new Vector3(newX, transform.position.y, transform.position.z);
 		}
@@ -569,7 +591,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 			else
 			{
 				float newX = player.transform.position.x - distanceToJump;
-				if (newX < -35f) newX = -35f;
+				if (newX < -10f) newX = -10f;
 
 				jumpLocation = new Vector3(newX, transform.position.y, transform.position.z);
 			}
@@ -611,7 +633,7 @@ public class Necromancer : MonoBehaviour, IDamageable
 
 	private void SummonSkeletons(int amountSkeletons)
 	{
-		float minX = -35;
+		float minX = -10;
 		float maxX = 95f;
 
 		float minimumSummonRange = 3f;
@@ -918,9 +940,11 @@ public class Necromancer : MonoBehaviour, IDamageable
 
 		yield return new WaitForSeconds(0.6f / attSpeed);
 		audioManager.PlayDeathBringerSwingSound();
-		meleeAttackTrigger.transform.gameObject.SetActive(true);
+		damaging = true;
+		//meleeAttackTrigger.transform.gameObject.SetActive(true);
 		yield return new WaitForSeconds(0.3f / attSpeed);
-		meleeAttackTrigger.transform.gameObject.SetActive(false);
+		damaging = false;
+		//meleeAttackTrigger.transform.gameObject.SetActive(false);
         yield return new WaitForSeconds(.45f / attSpeed);
 		attacking = false;
 		attackFatigueTimer.StartTimer(attackFatigueTime);
@@ -933,7 +957,10 @@ public class Necromancer : MonoBehaviour, IDamageable
 	{
 		if (triggerCollision.gameObject.tag == "Player")
 		{
-			triggerCollision.gameObject.GetComponent<IDamageable>().TakeDamage(currentStrength);
+            if (damaging)
+            {
+				triggerCollision.gameObject.GetComponent<IDamageable>().TakeDamage(currentStrength);
+			}
 		}
 	}
 }

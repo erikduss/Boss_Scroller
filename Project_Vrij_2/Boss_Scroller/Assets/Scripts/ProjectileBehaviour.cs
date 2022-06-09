@@ -32,7 +32,7 @@ public class ProjectileBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (transform.position.x < 0 || transform.position.x > 100)
+        if (transform.position.x < -11f || transform.position.x > 101)
         {
             StartCoroutine(DestroyThis());
         }
