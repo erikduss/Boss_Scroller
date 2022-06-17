@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -10,6 +11,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] public Necromancer necromancerEnemy;
     private SmoothCamera cam;
     private UIManager uiManager;
+
+    [SerializeField] private GameObject WarningPanel;
 
     [SerializeField] private AudioManager audioManager;
 
@@ -25,6 +28,7 @@ public class GameManager : MonoBehaviour
     public bool activatedNecromancer = false;
 
     private GameState currentGameState;
+    private int amountOfCorrectionAttempts = 0;
 
     // Start is called before the first frame update
     void Start()
@@ -40,6 +44,7 @@ public class GameManager : MonoBehaviour
 
         currentGameState = GameState.IN_MENU;
         correctionTimer.StartTimer(5f);
+        amountOfCorrectionAttempts = 0;
     }
 
     // Update is called once per frame
@@ -54,6 +59,13 @@ public class GameManager : MonoBehaviour
                         {
                             StartCoroutine(RestoreIncorrectionsInMenu());
                             correctionTimer.StartTimer(15f);
+
+                            if(amountOfCorrectionAttempts > 0)//it already tried to correct.
+                            {
+                                SceneManager.LoadScene("GameScene");
+                            }
+
+                            amountOfCorrectionAttempts++;
                         }
                     break;
                 case GameState.TUTORIAL:
@@ -61,6 +73,13 @@ public class GameManager : MonoBehaviour
                         {
                             StartGame();
                             correctionTimer.StartTimer(7.5f);
+
+                            if(amountOfCorrectionAttempts > 0)//it already tried to correct.
+                            {
+                                SceneManager.LoadScene("GameScene");
+                            }
+
+                            amountOfCorrectionAttempts++;
                         }
                     break;
                 case GameState.DEATHBRINGER:
@@ -68,6 +87,13 @@ public class GameManager : MonoBehaviour
                         {
                             LockDeathbringerBossRoom();
                             correctionTimer.StartTimer(6f);
+
+                            if(amountOfCorrectionAttempts > 0)//it already tried to correct.
+                            {
+                                SceneManager.LoadScene("GameScene");
+                            }
+
+                            amountOfCorrectionAttempts++;
                         }
                     break;
                 case GameState.NECROMANCER:
@@ -75,15 +101,51 @@ public class GameManager : MonoBehaviour
                         {
                             StartCoroutine(DeathBringerDefeated());
                             correctionTimer.StartTimer(10f);
+
+                            if(amountOfCorrectionAttempts > 0)//it already tried to correct.
+                            {
+                                SceneManager.LoadScene("GameScene");
+                            }
+
+                            amountOfCorrectionAttempts++;
                         }
                     break;
             }
         }
     }
 
+    public void StartGameOptionCheck()
+    {
+        if (PlayerPrefs.GetInt("ExperimentalEnabled") == 1)
+        {
+            WarningPanel.SetActive(true);
+        }
+        else
+        {
+            StartGame();
+        }
+    }
+
+    public void StartGameAndSetOption(bool state)
+    {
+        if (state)
+        {
+            StartGame();
+        }
+        else
+        {
+            PlayerPrefs.SetInt("ExperimentalEnabled", 0);
+            StartGame();
+        }
+    }
+
     public void StartGame()
     {
-        currentGameState = GameState.TUTORIAL;
+        if(currentGameState != GameState.TUTORIAL)
+        {
+            currentGameState = GameState.TUTORIAL;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(7.5f);
         uiManager.SetUIButtonStates(false);
         Cursor.visible = false;
@@ -112,7 +174,11 @@ public class GameManager : MonoBehaviour
 
     public void LockDeathbringerBossRoom()
     {
-        currentGameState = GameState.DEATHBRINGER;
+        if (currentGameState != GameState.DEATHBRINGER)
+        {
+            currentGameState = GameState.DEATHBRINGER;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(6f);
         bossRoomBorders.SetActive(true);
         StartCoroutine(audioManager.FadeAndChangeMusic(2f, MusicType.BOSS));
@@ -138,7 +204,11 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator DeathBringerDefeated()
     {
-        currentGameState = GameState.NECROMANCER;
+        if (currentGameState != GameState.NECROMANCER)
+        {
+            currentGameState = GameState.NECROMANCER;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(10f);
         uiManager.SetDeathBringerUI(false);
         audioManager.StopAllSoundEffects();
@@ -160,7 +230,11 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator NecromancerDefeated()
     {
-        currentGameState = GameState.IN_MENU;
+        if (currentGameState != GameState.IN_MENU)
+        {
+            currentGameState = GameState.IN_MENU;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(15f);
         uiManager.SetNecromancerUI(false);
         audioManager.StopAllSoundEffects();
@@ -172,7 +246,11 @@ public class GameManager : MonoBehaviour
     //combine this function with the game over?
     public IEnumerator EndTheGame()
     {
-        currentGameState = GameState.IN_MENU;
+        if (currentGameState != GameState.IN_MENU)
+        {
+            currentGameState = GameState.IN_MENU;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(15f);
         yield return new WaitForSeconds(5f);
         uiManager.SetEndDemoPanelAlpha(1, 2f);
@@ -203,7 +281,11 @@ public class GameManager : MonoBehaviour
 
     private IEnumerator RestoreIncorrectionsInMenu()
     {
-        currentGameState = GameState.IN_MENU;
+        if (currentGameState != GameState.IN_MENU)
+        {
+            currentGameState = GameState.IN_MENU;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(5f);
         yield return new WaitForSeconds(1f);
         cam.target = playerObject.transform;
@@ -220,7 +302,11 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator GameOver()
     {
-        currentGameState = GameState.IN_MENU;
+        if (currentGameState != GameState.IN_MENU)
+        {
+            currentGameState = GameState.IN_MENU;
+            amountOfCorrectionAttempts = 0;
+        }
         correctionTimer.StartTimer(15f);
         StartCoroutine(audioManager.PlayDefeatAudio());
         uiManager.SetDeathPanelAlpha(1,2f);
